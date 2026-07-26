@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PenLine, Timer, RotateCcw, Sparkles, Volume2, Brain, Heart, Lightbulb, Send, ChevronRight } from 'lucide-react'
 import { JournalCanvas } from '../components/JournalCanvas'
+import AiCompanionChat from '../components/AiCompanionChat'
 import { supabase } from '../lib/supabase'
 import { useApp } from '../context/AppContext'
 
@@ -41,6 +42,7 @@ export default function StresPage() {
   const [isDetoxActive, setIsDetoxActive] = useState(false)
   const [detoxTimer, setDetoxTimer] = useState(120)
   const [errorMsg, setErrorMsg] = useState('')
+  const [showChat, setShowChat] = useState(false)
 
   useEffect(() => {
     if (strokes.length > 0 && !isTimerActive) setIsTimerActive(true)
@@ -397,7 +399,12 @@ export default function StresPage() {
                   <button onClick={() => navigate('/sosial')}
                     className="w-full py-3 rounded-xl text-sm font-medium cursor-pointer border"
                     style={{ borderColor: 'var(--color-pilar-sosial)', color: 'var(--color-pilar-sosial)' }}>
-                    💬 Ngobrol dengan Trusted Circle
+                    💬 Ngobrol dengan Teman
+                  </button>
+                  <button onClick={() => setShowChat(true)}
+                    className="w-full py-3 rounded-xl text-sm font-medium text-white cursor-pointer"
+                    style={{ backgroundColor: 'var(--color-pilar-stres)' }}>
+                    🫂 Ngobrol Yuk (AI)
                   </button>
                 </>
               )}
@@ -416,6 +423,11 @@ export default function StresPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* AI Companion Chat */}
+      {showChat && (
+        <AiCompanionChat stressScore={result?.stress_score} onClose={() => setShowChat(false)} />
       )}
 
       {/* Detox Overlay */}
