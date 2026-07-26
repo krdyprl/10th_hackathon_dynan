@@ -34,36 +34,10 @@ app.add_middleware(
     allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_headers=["*"],
 )
 
-# Pastikan semua error responses juga include CORS headers
-@app.middleware("http")
-async def add_cors_on_error(request: Request, call_next):
-    try:
-        response = await call_next(request)
-        origin = request.headers.get("origin", "")
-        if origin in CORS_ORIGINS:
-            response.headers["Access-Control-Allow-Origin"] = origin
-            response.headers["Access-Control-Allow-Credentials"] = "true"
-            response.headers["Access-Control-Allow-Methods"] = "*"
-            response.headers["Access-Control-Allow-Headers"] = "*"
-        return response
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        origin = request.headers.get("origin", "")
-        headers = {}
-        if origin in CORS_ORIGINS:
-            headers["Access-Control-Allow-Origin"] = origin
-            headers["Access-Control-Allow-Credentials"] = "true"
-        return JSONResponse(
-            status_code=500,
-            content={"detail": f"Internal Server Error: {str(e)}"},
-            headers=headers
-        )
-
-# Catch FastAPI HTTPExceptions agar CORS tetap disisipkan
+# Catch FastAPI HTTPExceptions agar CORS tetap disisipkan untuk error response (seperti 401, 404, 422)
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     origin = request.headers.get("origin", "")
@@ -71,9 +45,29 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     if origin in CORS_ORIGINS:
         headers["Access-Control-Allow-Origin"] = origin
         headers["Access-Control-Allow-Credentials"] = "true"
+        headers["Access-Control-Allow-Methods"] = "*"
+        headers["Access-Control-Allow-Headers"] = "*"
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
+        headers=headers
+    )
+
+# Catch all unhandled exceptions agar crash backend (500) mengembalikan CORS header dan detail traceback yang bersih
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    import traceback
+    traceback.print_exc()
+    origin = request.headers.get("origin", "")
+    headers = {}
+    if origin in CORS_ORIGINS:
+        headers["Access-Control-Allow-Origin"] = origin
+        headers["Access-Control-Allow-Credentials"] = "true"
+        headers["Access-Control-Allow-Methods"] = "*"
+        headers["Access-Control-Allow-Headers"] = "*"
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Internal Server Error: {str(exc)}"},
         headers=headers
     )
 

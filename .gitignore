@@ -26,3 +26,6 @@ problem.txt
 session-ses_*.md
 Dataset *.json
 list.md
+
+# Local Netlify folder
+.netlify
