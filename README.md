@@ -1,8 +1,8 @@
 # InkTrace AI
 
-[![Tech Stack](https://img.shields.io/badge/Stack-React%20%7C%20FastAPI%20%7C%20Supabase%20%7C%20Groq-purple)](https://github.com/Kardynan/d--10th-hackathon-dynan)
-[![Testing](https://img.shields.io/badge/Tests-Pytest-green)](https://github.com/Kardynan/d--10th-hackathon-dynan)
-[![Design](https://img.shields.io/badge/Design-Minimalist%20Webflow-black)](https://github.com/Kardynan/d--10th-hackathon-dynan)
+[![Tech Stack](https://img.shields.io/badge/Stack-React%20%7C%20FastAPI%20%7C%20Supabase%20%7C%20Groq-purple)](https://github.com/krdyprl/10th_hackathon_dynan)
+[![Testing](https://img.shields.io/badge/Tests-Pytest-green)](https://github.com/krdyprl/10th_hackathon_dynan)
+[![Design](https://img.shields.io/badge/Design-Minimalist%20Webflow-black)](https://github.com/krdyprl/10th_hackathon_dynan)
 
 **InkTrace AI** adalah sistem *early self-awareness* berbasis jurnal tulisan tangan digital untuk mendeteksi perubahan emosional secara longitudinal dan menghubungkan kembali remaja (Gen Z) ke dunia nyata melalui analisis kinematika motorik menulis serta refleksi AI.
 
@@ -27,10 +27,10 @@ Aplikasi dirancang berdasarkan **PETA Framework (6 Pilar Kesejahteraan Mental)**
     *   **Vision OCR**: Gambar canvas PNG diubah menjadi teks oleh `llama-3.2-11b-vision-preview` di Groq API.
     *   **LLM Reflection Engine**: Menganalisis korelasi fisik, tulisan tangan, dan log kesehatan harian secara terstruktur menggunakan `llama-3.3-70b-specdec` pada Groq dengan format JSON dalam < 3 detik.
 *   **Privacy by Design**: File gambar PNG sementara yang diunggah ke server backend segera dihancurkan setelah ekstraksi AI selesai untuk menjaga privasi pengguna.
-*   **Trusted Circle (Social Support)**: Notifikasi email (via **Resend API**) dan WhatsApp (simulasi **OpenWA**) akan terkirim otomatis ke kontak terdekat untuk mengajak mereka menyapa pengguna jika tingkat stres terdeteksi tinggi (>70), tanpa membocorkan isi jurnal pribadi.
+*   **Trusted Circle (Social Support)**: Notifikasi email (via **Resend API**) dan WhatsApp (simulasi **OpenWA**) akan terkirim otomatis ke kontak terdekat untuk mengajak mereka menyapa pengguna jika tingkat stres terdeteksi tinggi (>70), tanpa membocorkan isi jurnal pribadi. *(Catatan: Data kontak saat ini dikelola sepenuhnya pada state frontend).*
 *   **Jomblo Mode (Digital Detox Timer)**: Fitur pembatasan fokus di mana antarmuka diblokir oleh overlay gelap dengan penghitung waktu mundur 2 menit, mendorong pengguna menulis jurnal dengan tenang tanpa distraksi digital.
 *   **Crisis Alert (Pencegahan Risiko)**: Deteksi otomatis kata kunci sensitif (seperti *self-harm*, *bunuh diri*) yang segera menampilkan modal bantuan darurat (*Crisis Helpline*).
-*   **Smart Routing Konseling Terdekat**: Menggunakan GPS lokasi pengguna untuk mencari klinik, rumah sakit, psikiater, atau psikolog terdekat lewat **Overpass API (OpenStreetMap)** secara real-time dan bebas halusinasi AI.
+*   **Smart Routing Bantuan Terdekat (Helper Module)**: Menyediakan modul backend (`backend/app/helplines.py`) untuk memetakan koordinat GPS ke Overpass API (OpenStreetMap) guna mencari klinik, rumah sakit, psikiater, psikolog, atau fasilitas sosial terdekat secara real-time dan bebas halusinasi AI.
 
 ---
 
@@ -116,7 +116,7 @@ Menyimpan fitur kinematik motorik menulis yang dihitung di backend.
 - `stroke_count` (integer, jumlah goresan)
 - `erase_count` (integer, jumlah penghapusan)
 - `duration_seconds` (integer, durasi menulis)
-- `average_velocity` (numeric, kecepatan rata-rata px/ms)
+- `average_velocity` (numeric, kecepatan rata-rata px/s)
 - `average_acceleration` (numeric, akselerasi rata-rata)
 - `jerk_score` (numeric, tremor halus motorik)
 - `pen_lifts` (integer, frekuensi angkatan pena)
@@ -205,17 +205,30 @@ pytest -v
 
 ---
 
+## 📝 Cara Menulis Commit (Standar Git)
+
+Gunakan standar pesan komitmen konvensional (*Conventional Commits*) saat berkontribusi di repositori ini. 
+Berikut prefix kategori commit yang direkomendasikan:
+*   `feat`: Menambahkan fitur baru (contoh: `feat: mengintegrasikan pipeline ocr dan analisis llm dengan groq sdk`)
+*   `fix`: Memperbaiki bug (contoh: `fix: menangani error canvas kosong pada submission`)
+*   `style`: Perubahan visual, gaya, layout CSS, atau token desain (contoh: `style: menyelaraskan warna aksen grafik recharts dengan token design system`)
+*   `database`: Migrasi schema SQL atau perubahan konfigurasi DB (contoh: `database: membuat migrasi sql untuk menyimpan fitur kinematik dan analisis llm`)
+*   `test`: Menambahkan atau memperbaiki unit/integration test (contoh: `test: menambahkan pengujian endpoint api/analyze`)
+*   `docs`: Dokumentasi proyek (contoh: `docs: membuat README.md komprehensif untuk dokumentasi proyek`)
+
+---
+
 ## 🏁 Sejauh Mana Project Ini? (Status Proyek)
 
 Proyek ini telah berhasil menyelesaikan tahap **MVP (Minimum Viable Product)**:
-- [x] **Backend FastAPI**: Menyediakan endpoint analisis `/api/analyze`, pencarian bantuan medis `/api/helplines` berbasis lokasi GPS, dan penarikan histori tren `/api/history`.
+- [x] **Backend FastAPI**: Menyediakan endpoint analisis `/api/analyze` dan penarikan histori tren `/api/history`. *(Catatan: Modul helplines berbasis GPS didefinisikan di `backend/app/helplines.py` tapi belum diekspos sebagai HTTP route `/api/helplines` karena di frontend data rujukan bantuan medis ditampilkan secara statis).*
 - [x] **Infrastruktur DB Supabase**: Migrasi tabel PostgreSQL, RLS Policy, dan database trigger saat user register sudah dikonfigurasi dan teruji sepenuhnya.
 - [x] **Pipeline AI (Groq)**: Terintegrasi dengan Vision OCR (`llama-3.2`) dan LLM Reflection (`llama-3.3`) yang mengembalikan data JSON terstruktur secara cepat dan andal.
 - [x] **Kalkulator Kinematika**: Menghitung secara matematis tremor (*jerk*), kecepatan, akselerasi, durasi, dan angkatan pena dari goresan digital.
 - [x] **Desain Frontend Webflow Style**: Implementasi UI React dengan design tokens warna Ink, Canvas, Aksen Ungu, Pink, Biru, Oranye, Hijau, dan Merah.
 - [x] **Dashboard Longitudinal**: Menampilkan metrik visual Radar Chart (Recharts) dan Line Chart responsif untuk memantau mood.
 - [x] **Digital Detox (Jomblo Mode)**: Berfungsi penuh memblokir distraksi selama pengguna menulis jurnal.
-- [x] **Crisis Modal & GPS Helplines**: Lokasi GPS pengguna diolah melalui Overpass API (OpenStreetMap) untuk menampilkan daftar 20 RS/Psikolog terdekat yang valid jika terdeteksi kata-kata kritis atau stres ekstrem.
+- [x] **Crisis Modal & Helplines**: Tampilan modal bantuan darurat (*Crisis Helpline*) aktif saat mendeteksi kata-kata kritis, didukung modul GPS Overpass API di backend.
 
 *Catatan: Integrasi notifikasi WhatsApp saat ini masih berjalan secara simulasi di console backend.*
 
