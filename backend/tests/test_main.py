@@ -2,10 +2,21 @@ import pytest
 import io
 import json
 from fastapi.testclient import TestClient
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
+
 from app.main import app
 
 client = TestClient(app)
+
+def _mock_user():
+    return MagicMock(id="test-user-id", email="test@test.com")
+
+@pytest.fixture(autouse=True)
+def override_deps():
+    from app.main import get_current_user
+    app.dependency_overrides[get_current_user] = _mock_user
+    yield
+    app.dependency_overrides.clear()
 
 @patch("app.main.calculate_kinematics")
 @patch("app.main.process_groq_pipeline")
@@ -18,7 +29,9 @@ def test_analyze_endpoint(mock_groq, mock_kinematic):
         "mood_score": 40
     }
 
-    # Mock canvas file upload
+    import app.main as m
+    m.supabase = None
+
     file_data = {"file": ("canvas.png", io.BytesIO(b"dummyimagebytes"), "image/png")}
 
     data = {
