@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.kinematics import calculate_kinematics
 from app.ai_groq import process_groq_pipeline
 from app.database import supabase
+from app.notifications import notify_trusted_circle
 
 app = FastAPI()
 
@@ -88,6 +89,13 @@ async def analyze_journal(
                 "mood_score": analysis_result.get("mood_score", 0),
                 "future_mood_prediction": json.dumps(analysis_result.get("future_mood_prediction", [])),
             }).execute()
+
+        stress = analysis_result.get("stress_score", 0)
+        if stress > 70:
+            user_profile = supabase.table("users").select("full_name").eq("id", user.id).execute()
+            user_name = user_profile.data[0]["full_name"] if user_profile.data else user.email
+            contacts = [{"name": "Trusted Circle", "type": "email", "value": user.email}]
+            notify_trusted_circle(user_name=user_name, stress_score=stress, contacts=contacts)
 
         return response_data
 
