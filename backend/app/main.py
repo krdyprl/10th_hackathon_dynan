@@ -9,6 +9,7 @@ from app.database import supabase
 from app.auth import get_current_user
 from app.notifications import notify_trusted_circle
 from app.helplines import find_nearby_helplines
+from app.ai_companion import get_companion_response
 
 app = FastAPI()
 
@@ -230,3 +231,16 @@ async def send_notification(contact_ids: list[str] = None, user = Depends(get_cu
 
     results = notify_trusted_circle(user_name=user_name, stress_score=80, contacts=contacts or [])
     return {"results": results}
+
+# --- AI Companion ---
+
+from pydantic import BaseModel
+
+class CompanionRequest(BaseModel):
+    messages: list
+    stress_score: int = None
+
+@app.post("/api/ai-companion")
+async def ai_companion_chat(req: CompanionRequest, user = Depends(get_current_user)):
+    result = get_companion_response(req.messages, req.stress_score)
+    return result
