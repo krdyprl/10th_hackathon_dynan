@@ -205,19 +205,6 @@ pytest -v
 
 ---
 
-## 📝 Cara Menulis Commit (Standar Git)
-
-Gunakan standar pesan komitmen konvensional (*Conventional Commits*) saat berkontribusi di repositori ini. 
-Berikut prefix kategori commit yang direkomendasikan:
-*   `feat`: Menambahkan fitur baru (contoh: `feat: mengintegrasikan pipeline ocr dan analisis llm dengan groq sdk`)
-*   `fix`: Memperbaiki bug (contoh: `fix: menangani error canvas kosong pada submission`)
-*   `style`: Perubahan visual, gaya, layout CSS, atau token desain (contoh: `style: menyelaraskan warna aksen grafik recharts dengan token design system`)
-*   `database`: Migrasi schema SQL atau perubahan konfigurasi DB (contoh: `database: membuat migrasi sql untuk menyimpan fitur kinematik dan analisis llm`)
-*   `test`: Menambahkan atau memperbaiki unit/integration test (contoh: `test: menambahkan pengujian endpoint api/analyze`)
-*   `docs`: Dokumentasi proyek (contoh: `docs: membuat README.md komprehensif untuk dokumentasi proyek`)
-
----
-
 ## 🏁 Sejauh Mana Project Ini? (Status Proyek)
 
 Proyek ini telah berhasil menyelesaikan tahap **MVP (Minimum Viable Product)**:
