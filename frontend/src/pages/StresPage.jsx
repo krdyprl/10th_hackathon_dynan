@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { PenLine, Timer, RotateCcw, Sparkles, Volume2, Brain, Heart, Lightbulb, Send, ChevronRight } from 'lucide-react'
 import { JournalCanvas } from '../components/JournalCanvas'
 import AiCompanionChat from '../components/AiCompanionChat'
+import BreathingGuide from '../components/BreathingGuide'
 import { supabase } from '../lib/supabase'
 import { useApp } from '../context/AppContext'
 
@@ -43,6 +44,7 @@ export default function StresPage() {
   const [detoxTimer, setDetoxTimer] = useState(120)
   const [errorMsg, setErrorMsg] = useState('')
   const [showChat, setShowChat] = useState(false)
+  const [showBreathing, setShowBreathing] = useState(false)
 
   useEffect(() => {
     if (strokes.length > 0 && !isTimerActive) setIsTimerActive(true)
@@ -382,16 +384,7 @@ export default function StresPage() {
             <div className="flex flex-col gap-2 mt-4">
               {result.stress_score >= 70 && (
                 <>
-                  <button onClick={() => {
-                    const el = document.querySelector('#breathing-guide')
-                    if (el) el.scrollIntoView({ behavior: 'smooth' })
-                    else {
-                      const guide = document.createElement('div')
-                      guide.id = 'breathing-guide'
-                      document.querySelector('[ref]')?.appendChild(guide)
-                    }
-                    window.dispatchEvent(new CustomEvent('start-breathing'))
-                  }}
+                  <button onClick={() => setShowBreathing(true)}
                     className="w-full py-3 rounded-xl text-sm font-medium text-white cursor-pointer"
                     style={{ backgroundColor: 'var(--color-pilar-stres)' }}>
                     🫁 Coba Tarik Napas
@@ -428,6 +421,11 @@ export default function StresPage() {
       {/* AI Companion Chat */}
       {showChat && (
         <AiCompanionChat stressScore={result?.stress_score} onClose={() => setShowChat(false)} />
+      )}
+
+      {/* Breathing Guide */}
+      {showBreathing && (
+        <BreathingGuide onClose={() => setShowBreathing(false)} />
       )}
 
       {/* Detox Overlay */}
