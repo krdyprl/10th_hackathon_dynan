@@ -96,6 +96,31 @@ export default function App() {
     } catch {}
   };
 
+  const detectLocation = () => {
+    if (!navigator.geolocation) return;
+    setLoadingHelplines(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setGpsLocation({ lat: latitude, lon: longitude });
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) return;
+          const res = await fetch(`http://localhost:8000/api/helplines?lat=${latitude}&lon=${longitude}&radius=5000`, {
+            headers: { 'Authorization': `Bearer ${session.access_token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setHelplines(data.results || []);
+          }
+        } catch {}
+        setLoadingHelplines(false);
+      },
+      () => setLoadingHelplines(false),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   // Crisis Alert State
   const [showCrisisModal, setShowCrisisModal] = useState(false);
   // Trusted circle contacts
@@ -108,6 +133,9 @@ export default function App() {
   const [newContactValue, setNewContactValue] = useState('');
   const [notificationSent, setNotificationSent] = useState(false);
   const [historyRange, setHistoryRange] = useState(7);
+  const [gpsLocation, setGpsLocation] = useState(null);
+  const [helplines, setHelplines] = useState([]);
+  const [loadingHelplines, setLoadingHelplines] = useState(false);
 
   // Start duration timer when drawing starts
   useEffect(() => {
@@ -601,27 +629,56 @@ export default function App() {
         {/* Smart Help Routing Section (Accent Green border) */}
         <div className="border-l-4 border-[#00d722] bg-[#f9fff9] rounded-r-[8px] p-6 mt-8">
           <span className="text-[11px] font-semibold tracking-[0.1em] text-[#00d722] uppercase block mb-1">Akses Bantuan Terdekat</span>
-          <h4 className="text-lg font-medium text-[#080808] mb-2">Konseling & Bantuan Profesional Terdekat</h4>
-          <p className="text-xs text-[#5a5a5a] mb-4">
-            Menghubungkan Anda langsung ke layanan medis terdekat tanpa resep otomatis AI.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white border border-[#d8d8d8] p-4 rounded-[4px] text-xs">
-              <strong className="text-[#080808] block mb-1">Rumah Sakit Umum Daerah (RSUD)</strong>
-              <p className="text-[#898989] mb-2">Poli Jiwa / Psikiatri Terdekat</p>
-              <span className="text-[10px] font-mono bg-[#00d722]/10 text-[#00d722] px-1.5 py-0.5 rounded">Rujukan GPS Akurat</span>
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h4 className="text-lg font-medium text-[#080808]">Konseling & Bantuan Profesional Terdekat</h4>
+              <p className="text-xs text-[#5a5a5a]">
+                {gpsLocation
+                  ? `Lokasi: ${gpsLocation.lat.toFixed(4)}, ${gpsLocation.lon.toFixed(4)}`
+                  : 'Aktifkan GPS untuk menemukan layanan terdekat'}
+              </p>
             </div>
-            <div className="bg-white border border-[#d8d8d8] p-4 rounded-[4px] text-xs">
-              <strong className="text-[#080808] block mb-1">Puskesmas Kecamatan</strong>
-              <p className="text-[#898989] mb-2">Layanan Psikologi Klinis bersubsidi</p>
-              <span className="text-[10px] font-mono bg-[#00d722]/10 text-[#00d722] px-1.5 py-0.5 rounded">Tarif Terjangkau</span>
-            </div>
-            <div className="bg-white border border-[#d8d8d8] p-4 rounded-[4px] text-xs">
-              <strong className="text-[#080808] block mb-1">Yayasan Into The Light</strong>
-              <p className="text-[#898989] mb-2">Pendampingan krisis pencegahan bunuh diri</p>
-              <a href="https://www.intothelightid.org" target="_blank" rel="noreferrer" className="text-[#3b89ff] hover:underline block font-semibold mt-1">Kunjungi Website</a>
-            </div>
+            <button
+              onClick={detectLocation}
+              disabled={loadingHelplines}
+              className="bg-[#00d722] hover:bg-[#00c01f] text-white text-xs font-medium px-4 py-2 rounded-[4px] transition-all cursor-pointer disabled:opacity-50"
+            >
+              {loadingHelplines ? 'Mendeteksi...' : gpsLocation ? 'Refresh Lokasi' : 'Deteksi Lokasi Saya'}
+            </button>
           </div>
+
+          {helplines.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {helplines.slice(0, 6).map((place, i) => (
+                <div key={i} className="bg-white border border-[#d8d8d8] p-4 rounded-[4px] text-xs">
+                  <strong className="text-[#080808] block mb-1">{place.name}</strong>
+                  {place.address && <p className="text-[#898989] mb-1">{place.address}</p>}
+                  {place.phone && <p className="text-[#3b89ff] mb-1">{place.phone}</p>}
+                  <span className="text-[10px] font-mono bg-[#00d722]/10 text-[#00d722] px-1.5 py-0.5 rounded">
+                    {place.type || 'Fasilitas Kesehatan'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white border border-[#d8d8d8] p-4 rounded-[4px] text-xs">
+                <strong className="text-[#080808] block mb-1">Rumah Sakit Umum Daerah (RSUD)</strong>
+                <p className="text-[#898989] mb-2">Poli Jiwa / Psikiatri Terdekat</p>
+                <span className="text-[10px] font-mono bg-[#00d722]/10 text-[#00d722] px-1.5 py-0.5 rounded">Rujukan GPS Akurat</span>
+              </div>
+              <div className="bg-white border border-[#d8d8d8] p-4 rounded-[4px] text-xs">
+                <strong className="text-[#080808] block mb-1">Puskesmas Kecamatan</strong>
+                <p className="text-[#898989] mb-2">Layanan Psikologi Klinis bersubsidi</p>
+                <span className="text-[10px] font-mono bg-[#00d722]/10 text-[#00d722] px-1.5 py-0.5 rounded">Tarif Terjangkau</span>
+              </div>
+              <div className="bg-white border border-[#d8d8d8] p-4 rounded-[4px] text-xs">
+                <strong className="text-[#080808] block mb-1">Yayasan Into The Light</strong>
+                <p className="text-[#898989] mb-2">Pendampingan krisis pencegahan bunuh diri</p>
+                <a href="https://www.intothelightid.org" target="_blank" rel="noreferrer" className="text-[#3b89ff] hover:underline block font-semibold mt-1">Kunjungi Website</a>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
