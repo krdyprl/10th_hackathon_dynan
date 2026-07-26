@@ -23,6 +23,7 @@ def get_companion_response(messages: list, stress_score: int = None) -> dict:
         return {
             "reply": "Aku di sini untukmu. Ceritakan apa yang kamu rasakan.",
             "is_stable": False,
+            "is_crisis": False,
         }
 
     try:
@@ -33,7 +34,7 @@ def get_companion_response(messages: list, stress_score: int = None) -> dict:
             groq_messages.append({"role": msg["role"], "content": msg["content"]})
 
         completion = client.chat.completions.create(
-            model="llama-3.3-70b-specdec",
+            model="llama-3.3-70b-versatile",
             messages=groq_messages,
             temperature=0.7,
             max_tokens=200,
@@ -59,4 +60,5 @@ def get_companion_response(messages: list, stress_score: int = None) -> dict:
         return {
             "reply": "Maaf, aku sedang kesulitan merespon. Tapi aku di sini untukmu. Coba ceritakan lagi?",
             "is_stable": False,
+            "is_crisis": False,
         }

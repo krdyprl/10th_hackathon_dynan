@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { MessageCircle, Send, X, User, Bot, Sparkles } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const INISIAL = {
   role: 'assistant',
@@ -31,7 +32,7 @@ export default function AiCompanionChat({ stressScore, onClose }) {
 
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('http://localhost:8000/api/ai-companion', {
+      const res = await fetch(API_BASE + '/api/ai-companion', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

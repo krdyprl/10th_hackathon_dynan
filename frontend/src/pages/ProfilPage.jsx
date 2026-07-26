@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { User, LogOut, BookOpen, Flame, Heart, Clock, ChevronRight } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function ProfilPage() {
   const navigate = useNavigate()
@@ -27,8 +28,8 @@ export default function ProfilPage() {
       const headers = await getHeaders()
 
       const [histRes, streakRes] = await Promise.all([
-        fetch('http://localhost:8000/api/history?range=90', { headers }).then(r => r.ok ? r.json() : null),
-        fetch('http://localhost:8000/api/habits/streak', { headers }).then(r => r.ok ? r.json() : null),
+        fetch(API_BASE + '/api/history?range=90', { headers }).then(r => r.ok ? r.json() : null),
+        fetch(API_BASE + '/api/habits/streak', { headers }).then(r => r.ok ? r.json() : null),
       ])
 
       const entries = histRes?.entries || []

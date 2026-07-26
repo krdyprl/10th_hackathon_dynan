@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { JournalCanvas } from '../components/JournalCanvas'
 import { supabase } from '../lib/supabase'
 import { useApp } from '../context/AppContext'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const guidedPrompts = [
   { id: 1, text: 'Apa yang paling saya syukuri hari ini?' },
@@ -94,7 +95,7 @@ export default function KanvasPage() {
       formData.append('exercise_status', 'no')
 
       const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('http://localhost:8000/api/analyze', {
+      const res = await fetch(API_BASE + '/api/analyze', {
         method: 'POST',
         headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
         body: formData

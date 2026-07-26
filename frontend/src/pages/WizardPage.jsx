@@ -6,6 +6,7 @@ import AnalisisStep from '../steps/AnalisisStep'
 import InsightStep from '../steps/InsightStep'
 import { supabase } from '../lib/supabase'
 import { useApp } from '../context/AppContext'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function WizardPage() {
   const [step, setStep] = useState(0)
@@ -37,7 +38,7 @@ export default function WizardPage() {
           formData.append('exercise_status', 'no')
 
           const { data: { session } } = await supabase.auth.getSession()
-          const res = await fetch('http://localhost:8000/api/analyze', {
+          const res = await fetch(API_BASE + '/api/analyze', {
             method: 'POST',
             headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
             body: formData,

@@ -27,8 +27,9 @@ export default function BantuanPage() {
 
         try {
           const { data: { session } } = await supabase.auth.getSession()
+          const { apiUrl } = await import('../lib/api')
           const res = await fetch(
-            `http://localhost:8000/api/helplines?lat=${latitude}&lon=${longitude}&radius=5000`,
+            apiUrl(`/api/helplines?lat=${latitude}&lon=${longitude}&radius=5000`),
             { headers: session ? { Authorization: `Bearer ${session.access_token}` } : {} }
           )
           if (res.ok) setHelplines((await res.json()).results || [])

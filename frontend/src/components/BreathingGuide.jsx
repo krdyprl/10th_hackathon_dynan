@@ -56,10 +56,16 @@ export default function BreathingGuide({ onClose }) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } })
       streamRef.current = stream
-      if (videoRef.current) videoRef.current.srcObject = stream
       setCameraOn(true)
-      setTimeout(() => setIsPlaying(true), 500)
-      startDetection()
+      // Tunggu state update & re-render dulu, baru sambungkan stream ke video element
+      setTimeout(async () => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          try { await videoRef.current.play() } catch {}
+        }
+        setIsPlaying(true)
+        startDetection()
+      }, 100)
     } catch { setCameraOn(false) }
   }
 
@@ -75,7 +81,7 @@ export default function BreathingGuide({ onClose }) {
     detectIntervalRef.current = setInterval(() => {
       const video = videoRef.current, canvas = canvasRef.current
       if (!video || !canvas) return
-      const ctx = canvas.getContext('2d')
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
       canvas.width = 128; canvas.height = 96
       ctx.drawImage(video, 0, 0, 128, 96)
       const imageData = ctx.getImageData(0, 0, 128, 96)
@@ -123,13 +129,33 @@ export default function BreathingGuide({ onClose }) {
           </button>
         ) : (
           <>
-            <div className="relative flex items-center justify-center h-56">
-              <div className="absolute inset-0 rounded-2xl overflow-hidden opacity-80">
-                <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
-                <canvas ref={canvasRef} className="hidden" />
-              </div>
-              <div id="breath-circle" className="w-40 h-40 rounded-full flex items-center justify-center transition-none" style={{ transform: 'scale(0.6)', backgroundColor: 'var(--color-pilar-stres-soft)', border: '3px solid var(--color-pilar-stres)', zIndex: 1 }}>
-                <div className="text-center"><div className="text-3xl" style={{ color: 'var(--color-pilar-stres)' }}>{phase?.action === 'Tarik' ? '👃' : phase?.action === 'Buang' ? '👄' : '💜'}</div></div>
+            <div className="relative flex items-center justify-center h-64 w-full rounded-2xl overflow-hidden bg-black">
+              {/* Video feed wajah user — full frame, tidak transparan */}
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
+              />
+              <canvas ref={canvasRef} className="hidden" />
+              {/* Lingkaran napas di atas video, semi-transparan agar wajah tetap terlihat */}
+              <div
+                id="breath-circle"
+                className="relative w-36 h-36 rounded-full flex items-center justify-center transition-none"
+                style={{
+                  transform: 'scale(0.6)',
+                  backgroundColor: 'rgba(139,92,246,0.25)',
+                  border: '3px solid var(--color-pilar-stres)',
+                  backdropFilter: 'blur(2px)',
+                  zIndex: 1
+                }}
+              >
+                <div className="text-center">
+                  <div className="text-3xl drop-shadow-lg">
+                    {phase?.action === 'Tarik' ? '👃' : phase?.action === 'Buang' ? '👄' : '💜'}
+                  </div>
+                </div>
               </div>
             </div>
             <div className="text-xs font-mono" style={{ color: 'var(--color-text-muted)' }}>Deteksi: {detectedPhase}</div>

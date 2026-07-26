@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Sun, Moon, Timer, Flame } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function SehatPage() {
   const [sleepHours, setSleepHours] = useState(7)
@@ -25,7 +26,7 @@ export default function SehatPage() {
   const loadHabits = async () => {
     try {
       const headers = await getAuthHeaders()
-      const res = await fetch('http://localhost:8000/api/habits', { headers })
+      const res = await fetch(API_BASE + '/api/habits', { headers })
       if (res.ok) {
         const data = await res.json()
         if (data.habits) {
@@ -40,7 +41,7 @@ export default function SehatPage() {
   const loadStreak = async () => {
     try {
       const headers = await getAuthHeaders()
-      const res = await fetch('http://localhost:8000/api/habits/streak', { headers })
+      const res = await fetch(API_BASE + '/api/habits/streak', { headers })
       if (res.ok) {
         const data = await res.json()
         setStreak(data.streak || 0)
@@ -57,7 +58,7 @@ export default function SehatPage() {
       body.append('sleep_hours', sleepHours.toString())
       body.append('exercise_status', exerciseStatus)
 
-      await fetch('http://localhost:8000/api/habits', {
+      await fetch(API_BASE + '/api/habits', {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded' },
         body: body.toString(),

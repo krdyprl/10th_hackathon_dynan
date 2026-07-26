@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Heart, Plus, Trash2, Send, MessageCircle, Sparkles } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function SosialPage() {
   const [contacts, setContacts] = useState([])
@@ -26,7 +27,7 @@ export default function SosialPage() {
   const loadContacts = async () => {
     try {
       const headers = await getHeaders()
-      const res = await fetch('http://localhost:8000/api/trusted-circles', { headers })
+      const res = await fetch(API_BASE + '/api/trusted-circles', { headers })
       if (res.ok) setContacts((await res.json()).contacts || [])
     } catch {}
     setLoading(false)
@@ -38,7 +39,7 @@ export default function SosialPage() {
     setSaving(true)
     try {
       const headers = await getHeaders()
-      const res = await fetch('http://localhost:8000/api/trusted-circles', {
+      const res = await fetch(API_BASE + '/api/trusted-circles', {
         method: 'POST',
         headers,
         body: JSON.stringify({ contact_name: newName, contact_type: newType, contact_value: newValue }),
@@ -54,7 +55,7 @@ export default function SosialPage() {
   const handleDelete = async (id) => {
     try {
       const headers = await getHeaders()
-      await fetch(`http://localhost:8000/api/trusted-circles/${id}`, { method: 'DELETE', headers })
+      await fetch(`${API_BASE}/api/trusted-circles/${id}`, { method: 'DELETE', headers })
       setContacts(p => p.filter(c => c.id !== id))
     } catch {}
   }
@@ -63,7 +64,7 @@ export default function SosialPage() {
     setNotificationStatus('sending')
     try {
       const headers = await getHeaders()
-      const res = await fetch('http://localhost:8000/api/notify', {
+      const res = await fetch(API_BASE + '/api/notify', {
         method: 'POST',
         headers,
         body: JSON.stringify({}),

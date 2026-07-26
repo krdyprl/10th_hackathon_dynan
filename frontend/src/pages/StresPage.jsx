@@ -6,6 +6,7 @@ import AiCompanionChat from '../components/AiCompanionChat'
 import BreathingGuide from '../components/BreathingGuide'
 import { supabase } from '../lib/supabase'
 import { useApp } from '../context/AppContext'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const prompts = [
   'Apa yang paling kamu syukuri hari ini?',
@@ -105,7 +106,7 @@ export default function StresPage() {
       formData.append('exercise_status', 'no')
 
       const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('http://localhost:8000/api/analyze', {
+      const res = await fetch(API_BASE + '/api/analyze', {
         method: 'POST',
         headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
         body: formData,
@@ -231,7 +232,7 @@ export default function StresPage() {
       )}
 
       {/* Canvas */}
-      {!loading && !result && (
+      {!loading && !result && !isDetoxActive && (
         <div className="border rounded-2xl overflow-hidden mb-3" style={{ borderColor: 'var(--color-pilar-stres)' }}>
           <JournalCanvas ref={canvasRef} onStrokeChange={setStrokes} onEraseCountChange={setEraseCount} />
         </div>
@@ -430,21 +431,25 @@ export default function StresPage() {
 
       {/* Detox Overlay */}
       {isDetoxActive && (
-        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-8 text-white">
-          <div className="max-w-xl w-full text-center space-y-6">
-            <span className="text-xs font-mono tracking-widest uppercase" style={{ color: 'var(--color-pilar-stres)' }}>Waktu untuk diri sendiri</span>
-            <h2 className="text-3xl font-semibold">Fokus Menulis</h2>
-            <p className="text-sm opacity-60">Semua distraksi ditutup. Tenang dan tulis.</p>
-            <div className="text-5xl font-mono font-semibold" style={{ color: 'var(--color-pilar-stres)' }}>
-              {Math.floor(detoxTimer / 60)}:{String(detoxTimer % 60).padStart(2, '0')}
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 md:p-8 text-white">
+          <div className="w-full max-w-2xl flex flex-col" style={{ height: '100%' }}>
+            <div className="text-center mb-4 flex-shrink-0">
+              <span className="text-xs font-mono tracking-widest uppercase" style={{ color: 'var(--color-pilar-stres)' }}>Waktu untuk diri sendiri</span>
+              <h2 className="text-2xl md:text-3xl font-semibold mt-1">Fokus Menulis</h2>
+              <p className="text-sm opacity-60 mt-1">Semua distraksi ditutup. Tenang dan tulis.</p>
+              <div className="text-4xl md:text-5xl font-mono font-semibold mt-2" style={{ color: 'var(--color-pilar-stres)' }}>
+                {Math.floor(detoxTimer / 60)}:{String(detoxTimer % 60).padStart(2, '0')}
+              </div>
             </div>
-            <div className="border rounded-2xl overflow-hidden bg-white p-4 h-[280px]" style={{ borderColor: 'var(--color-pilar-stres)' }}>
+            <div className="flex-1 min-h-0 border rounded-2xl overflow-hidden" style={{ borderColor: 'var(--color-pilar-stres)' }}>
               <JournalCanvas ref={canvasRef} onStrokeChange={setStrokes} onEraseCountChange={setEraseCount} />
             </div>
-            <button onClick={() => setIsDetoxActive(false)}
-              className="bg-white text-black font-medium text-sm py-2 px-8 rounded-xl cursor-pointer hover:opacity-90">
-              Selesai
-            </button>
+            <div className="flex-shrink-0 mt-4 text-center">
+              <button onClick={() => setIsDetoxActive(false)}
+                className="bg-white text-black font-medium text-sm py-2.5 px-10 rounded-xl cursor-pointer hover:opacity-90">
+                Selesai
+              </button>
+            </div>
           </div>
         </div>
       )}

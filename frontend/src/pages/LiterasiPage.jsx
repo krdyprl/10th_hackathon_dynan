@@ -4,6 +4,7 @@ import { HandwritingRadarChart } from '../components/HandwritingRadarChart'
 import { MoodTrendChart } from '../components/MoodTrendChart'
 import { useApp } from '../context/AppContext'
 import { supabase } from '../lib/supabase'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function LiterasiPage() {
   const { analysisResult, radarData, moodTrend, setMoodTrend } = useApp()
@@ -27,7 +28,7 @@ export default function LiterasiPage() {
   const fetchHistory = async () => {
     try {
       const headers = await getHeaders()
-      const res = await fetch(`http://localhost:8000/api/history?range=${historyRange}`, { headers })
+      const res = await fetch(`${API_BASE}/api/history?range=${historyRange}`, { headers })
       if (!res.ok) return
       const data = await res.json()
       if (data.entries?.length > 0) {
@@ -48,7 +49,7 @@ export default function LiterasiPage() {
     setLoadingTimeline(true)
     try {
       const headers = await getHeaders()
-      const res = await fetch('http://localhost:8000/api/history?range=30', { headers })
+      const res = await fetch(API_BASE + '/api/history?range=30', { headers })
       if (!res.ok) { console.warn('Timeline API error:', res.status); return }
       const data = await res.json()
       if (data.entries) {

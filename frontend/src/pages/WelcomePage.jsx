@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Sun, PenLine, Heart, MapPin, UserPlus, BarChart3, Flame } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useApp } from '../context/AppContext'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function WelcomePage() {
   const navigate = useNavigate()
@@ -41,8 +42,8 @@ export default function WelcomePage() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
       const [habRes, histRes] = await Promise.all([
-        fetch('http://localhost:8000/api/habits', { headers: { Authorization: `Bearer ${session.access_token}` } }).then(r => r.ok ? r.json() : null),
-        fetch('http://localhost:8000/api/history?range=1', { headers: { Authorization: `Bearer ${session.access_token}` } }).then(r => r.ok ? r.json() : null),
+        fetch(API_BASE + '/api/habits', { headers: { Authorization: `Bearer ${session.access_token}` } }).then(r => r.ok ? r.json() : null),
+        fetch(API_BASE + '/api/history?range=1', { headers: { Authorization: `Bearer ${session.access_token}` } }).then(r => r.ok ? r.json() : null),
       ])
       setTodaySummary({ habits: habRes?.habits, todayEntries: histRes?.entries || [] })
     } catch {}
@@ -53,7 +54,7 @@ export default function WelcomePage() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
-      const res = await fetch('http://localhost:8000/api/trusted-circles', { headers: { Authorization: `Bearer ${session.access_token}` } })
+      const res = await fetch(API_BASE + '/api/trusted-circles', { headers: { Authorization: `Bearer ${session.access_token}` } })
       if (res.ok) {
         const data = await res.json()
         setContacts(data.contacts || [])
@@ -79,7 +80,7 @@ export default function WelcomePage() {
     setMoodScore(score)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      await fetch('http://localhost:8000/api/mood-logs', {
+      await fetch(API_BASE + '/api/mood-logs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
         body: JSON.stringify({ mood_score: score, note }),
@@ -94,7 +95,7 @@ export default function WelcomePage() {
     setSavingContact(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('http://localhost:8000/api/trusted-circles', {
+      const res = await fetch(API_BASE + '/api/trusted-circles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
         body: JSON.stringify({ contact_name: newName, contact_type: newType, contact_value: newValue }),

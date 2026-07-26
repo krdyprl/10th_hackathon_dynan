@@ -1,4 +1,4 @@
-import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
+import React, { useRef, useState, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { ReactSketchCanvas } from 'react-sketch-canvas';
 
 export const JournalCanvas = forwardRef(({ onStrokeChange, onEraseCountChange }, ref) => {
@@ -6,46 +6,27 @@ export const JournalCanvas = forwardRef(({ onStrokeChange, onEraseCountChange },
   const [eraseCount, setEraseCount] = useState(0);
   const [isEraserMode, setIsEraserMode] = useState(false);
   const strokesRef = useRef([]);
-  const currentStrokeRef = useRef(null);
-  const startTimeRef = useRef(null);
-  const isDrawingRef = useRef(false);
 
-  const handlePointerDown = (e) => {
-    if (isEraserMode) return;
+  const handleStrokeComplete = useCallback((path, isEraser) => {
+    if (isEraser) return;
+    const points = path.paths;
+    if (points.length < 2) return;
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const startTime = path.startTimestamp || 0;
+    const endTime = path.endTimestamp || Date.now();
+    const duration = endTime - startTime;
 
-    isDrawingRef.current = true;
-    startTimeRef.current = Date.now();
-    currentStrokeRef.current = {
-      points: [{ x, y, time: 0 }]
-    };
-  };
+    const withTime = points.map((p, i) => ({
+      x: p.x,
+      y: p.y,
+      time: points.length > 1 ? Math.round((i / (points.length - 1)) * duration) : 0,
+    }));
 
-  const handlePointerMove = (e) => {
-    if (!isDrawingRef.current || !currentStrokeRef.current) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const time = Date.now() - startTimeRef.current;
-
-    currentStrokeRef.current.points.push({ x, y, time });
-  };
-
-  const handlePointerUp = () => {
-    if (!isDrawingRef.current) return;
-    isDrawingRef.current = false;
-    if (currentStrokeRef.current && currentStrokeRef.current.points.length > 0) {
-      strokesRef.current.push(currentStrokeRef.current);
-      if (onStrokeChange) {
-        onStrokeChange([...strokesRef.current]);
-      }
+    strokesRef.current.push({ points: withTime });
+    if (onStrokeChange) {
+      onStrokeChange([...strokesRef.current]);
     }
-    currentStrokeRef.current = null;
-  };
+  }, [onStrokeChange]);
 
   const handleClear = () => {
     canvasRef.current?.clearCanvas();
@@ -85,30 +66,25 @@ export const JournalCanvas = forwardRef(({ onStrokeChange, onEraseCountChange },
   }));
 
   return (
-    <div className="bg-white border border-[#d8d8d8] rounded-[8px] p-6 md:p-8 hover:shadow-[0_13px_13px_rgba(0,0,0,0.04)] transition-all">
-      <div className="flex justify-between items-center mb-4">
+    <div className="bg-white border border-[#d8d8d8] rounded-[8px] p-6 md:p-8 hover:shadow-[0_13px_13px_rgba(0,0,0,0.04)] transition-all flex flex-col">
+      <div className="flex justify-between items-center mb-4 flex-shrink-0">
         <h3 className="text-xl font-medium tracking-tight text-[#080808]">Kanvas Refleksi</h3>
         <span className="text-xs text-[#898989] font-mono">Erase Count: {eraseCount}</span>
       </div>
 
-      <div
-        className="border-2 border-[#7a3dff] rounded-[8px] overflow-hidden bg-white relative cursor-crosshair"
-        style={{ height: '350px' }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
-      >
+      <div className="border-2 border-[#7a3dff] rounded-[8px] overflow-hidden bg-white relative cursor-crosshair flex-1">
         <ReactSketchCanvas
           ref={canvasRef}
           strokeWidth={4}
           strokeColor="#7a3dff"
           canvasColor="#ffffff"
-          style={{ width: '100%', height: '100%' }}
+          withTimestamp
+          onStroke={handleStrokeComplete}
+          style={{ width: '100%', height: '500px' }}
         />
       </div>
 
-      <div className="flex gap-3 mt-4">
+      <div className="flex gap-3 mt-4 flex-shrink-0">
         <button
           onClick={() => {
             setIsEraserMode(false);

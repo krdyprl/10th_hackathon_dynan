@@ -1,7 +1,8 @@
+import os
 import math
 import requests
 
-OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+OVERPASS_URL = os.environ.get("OVERPASS_URL", "https://overpass-api.de/api/interpreter")
 
 
 def _haversine(lat1, lon1, lat2, lon2):

@@ -1,8 +1,11 @@
 import os
 import shutil
 import json
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends
+import tempfile
+from dotenv import load_dotenv
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from app.kinematics import calculate_kinematics
 from app.ai_groq import process_groq_pipeline
@@ -12,15 +15,37 @@ from app.notifications import notify_trusted_circle
 from app.helplines import find_nearby_helplines
 from app.ai_companion import get_companion_response
 
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'), override=True)
+
 app = FastAPI()
+
+_cors_env = os.environ.get("CORS_ORIGINS", "")
+CORS_ORIGINS = [o.strip() for o in _cors_env.split(",") if o.strip()] or [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "http://localhost:4173",
+    "http://127.0.0.1:4173",
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["Authorization", "Content-Type"],
 )
+
+# Pastikan semua error responses juga include CORS headers
+@app.middleware("http")
+async def add_cors_on_error(request: Request, call_next):
+    response = await call_next(request)
+    origin = request.headers.get("origin", "")
+    if origin in CORS_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 @app.post("/api/analyze")
 async def analyze_journal(
@@ -32,8 +57,11 @@ async def analyze_journal(
     exercise_status: str = Form(...),
     user = Depends(get_current_user)
 ):
-    os.makedirs("/tmp", exist_ok=True)
-    temp_file_path = f"/tmp/{file.filename}"
+    # Gunakan tempfile agar cross-platform (Windows tidak punya /tmp)
+    suffix = os.path.splitext(file.filename or "image.png")[1] or ".png"
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+    temp_file_path = tmp.name
+    tmp.close()
 
     try:
         with open(temp_file_path, "wb") as buffer:
@@ -96,6 +124,9 @@ async def analyze_journal(
         return response_data
 
     except Exception as e:
+        import traceback
+        print(f"ANALYZE ERROR: {e}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Analysis pipeline failed: {str(e)}")
 
     finally:
@@ -129,46 +160,35 @@ async def get_history_with_mood(range: int = 7, user = Depends(get_current_user)
     if not supabase:
         return {"entries": []}
 
-    journal_result = supabase.table("llm_analyses") \
-        .select("journals!inner(created_at, user_id), sentiment_label, sentiment_score, stress_score, mood_score") \
-        .gte("journals.created_at", f"now() - interval '{range} days'") \
-        .eq("journals.user_id", user.id) \
-        .order("journals.created_at", desc=True) \
-        .limit(100) \
-        .execute()
+    from datetime import datetime, timedelta, timezone
+    since = (datetime.now(timezone.utc) - timedelta(days=range)).isoformat()
 
-    mood_result = supabase.table("mood_logs") \
-        .select("*") \
-        .eq("user_id", user.id) \
-        .gte("created_at", f"now() - interval '{range} days'") \
-        .order("created_at", desc=True) \
-        .limit(100) \
-        .execute()
+    try:
+        journals = supabase.table("journals").select("id, created_at, ocr_text").eq("user_id", user.id).gte("created_at", since).order("created_at", desc=True).limit(100).execute()
+        journal_ids = [j["id"] for j in (journals.data or [])]
 
-    entries = []
-    for row in journal_result.data:
-        entries.append({
-            "type": "journal",
-            "date": row["journals"]["created_at"],
-            "sentiment_label": row["sentiment_label"],
-            "sentiment_score": row["sentiment_score"],
-            "stress_score": row["stress_score"],
-            "mood_score": row["mood_score"],
-        })
-    for row in mood_result.data:
+        entries = []
         mood_desc = {1: "Sangat Buruk", 2: "Buruk", 3: "Biasa", 4: "Baik", 5: "Sangat Baik"}
-        entries.append({
-            "type": "mood",
-            "date": row["created_at"],
-            "sentiment_label": mood_desc.get(row["mood_score"], "Biasa"),
-            "sentiment_score": row["mood_score"] * 20,
-            "mood_score": row["mood_score"] * 20,
-            "stress_score": None,
-            "note": row.get("note", ""),
-        })
 
-    entries.sort(key=lambda e: e["date"])
-    return {"entries": entries}
+        if journal_ids:
+            llm = supabase.table("llm_analyses").select("*").in_("journal_id", journal_ids).execute()
+            llm_map = {r["journal_id"]: r for r in (llm.data or [])}
+            for j in (journals.data or []):
+                lid = j["id"]
+                if lid in llm_map:
+                    lr = llm_map[lid]
+                    entries.append({"type": "journal", "date": j["created_at"], "ocr_text": j.get("ocr_text", ""), "sentiment_label": lr.get("sentiment_label", ""), "sentiment_score": lr.get("sentiment_score", 0), "stress_score": lr.get("stress_score", 0), "mood_score": lr.get("mood_score", 0), "handwriting_insights": lr.get("handwriting_insights", ""), "recommendations": lr.get("recommendations", "")})
+
+        moods = supabase.table("mood_logs").select("*").eq("user_id", user.id).gte("created_at", since).order("created_at", desc=True).limit(100).execute()
+        for row in (moods.data or []):
+            entries.append({"type": "mood", "date": row["created_at"], "sentiment_label": mood_desc.get(row["mood_score"], "Biasa"), "sentiment_score": row["mood_score"] * 20, "mood_score": row["mood_score"] * 20, "stress_score": None, "note": row.get("note", "")})
+
+        entries.sort(key=lambda e: e["date"])
+        return {"entries": entries}
+    except Exception as e:
+        print(f"HISTORY ERROR: {e}")
+        import traceback; traceback.print_exc()
+        return {"entries": []}
 
 # --- Habits — using habits router ---
 
@@ -224,21 +244,36 @@ async def delete_trusted_circle(contact_id: str, user = Depends(get_current_user
 
 # --- Notify ---
 
+class NotifyRequest(BaseModel):
+    contact_ids: list = None
+    custom_message: str = None
+    stress_score: int = 50
+
 @app.post("/api/notify")
-async def send_notification(contact_ids: list[str] = None, user = Depends(get_current_user)):
+async def send_notification(req: NotifyRequest = None, user = Depends(get_current_user)):
     if not supabase:
         return {"status": "skipped", "reason": "No database"}
 
+    req = req or NotifyRequest()
     query = supabase.table("trusted_circles").select("*").eq("user_id", user.id)
-    if contact_ids:
-        query = query.in_("id", contact_ids)
-    contacts = query.execute().data
+    if req.contact_ids:
+        query = query.in_("id", req.contact_ids)
+    raw_contacts = query.execute().data or []
+
+    if not raw_contacts:
+        return {"status": "no_contacts", "results": []}
 
     user_profile = supabase.table("users").select("full_name").eq("id", user.id).execute()
     user_name = user_profile.data[0]["full_name"] if user_profile.data else user.email
 
-    results = notify_trusted_circle(user_name=user_name, stress_score=80, contacts=contacts or [])
-    return {"results": results}
+    results = notify_trusted_circle(
+        user_name=user_name,
+        stress_score=req.stress_score,
+        contacts=raw_contacts,  # notify_trusted_circle sekarang support raw Supabase rows
+        custom_message=req.custom_message,
+    )
+    sent = sum(1 for r in results if r.get("status") == "sent")
+    return {"status": "done", "sent": sent, "total": len(results), "results": results}
 
 # --- AI Companion ---
 

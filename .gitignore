@@ -20,3 +20,8 @@ __pycache__/
 .eggs/
 venv/
 .venv/
+.pytest_cache/
+.pytest_cache*/
+problem.txt
+session-ses_*.md
+Dataset *.json

@@ -4,7 +4,7 @@ import base64
 from dotenv import load_dotenv
 from groq import Groq
 
-load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'), override=True)
 
 groq_api_key = os.getenv("GROQ_API_KEY", "")
 groq_client = Groq(api_key=groq_api_key) if groq_api_key else None
@@ -55,23 +55,29 @@ def process_groq_pipeline(image_path: str, kinematics: dict, sleep_hours: float,
     """
 
     analysis_response = groq_client.chat.completions.create(
-        model="llama-3.3-70b-specdec",
+        model="llama-3.3-70b-versatile",
         response_format={"type": "json_object"},
         messages=[
             {
                 "role": "system",
-                "content": """Kamu adalah seorang Psikolog Empatis dan Pakar Grafologi. Analisis data tersebut untuk menentukan kondisi emosional pengguna.
-                Kamu WAJIB mengembalikan output dalam format JSON mentah dengan struktur berikut:
-                {
-                  "sentiment_label": "Anxious" | "Sad" | "Angry" | "Positive" | "Neutral",
-                  "sentiment_score": integer (0-100),
-                  "handwriting_insights": string (max 3 kalimat, empatis, ramah Gen Z, tanpa diagnosis klinis atau saran obat),
-                  "mood_stress_correlation": string (analisis hubungan fisik dan goresan tulisan dengan emosi hari ini),
-                  "recommendations": string (latihan pernapasan/meditasi singkat),
-                  "stress_score": integer (0-100),
-                  "mood_score": integer (0-100),
-                  "future_mood_prediction": [int, int, int, int] (skor mood 4 hari ke depan)
-                }"""
+                "content": """Kamu adalah Psikolog Empatis dan Pakar Grafologi yang membantu remaja Gen Z memahami emosi mereka. Gaya bicara hangat, santai, seperti teman curhat yang bijak. BAHASA INDONESIA.
+
+PERAN:
+- Psikolog: membantu pengguna memahami korelasi antara kebiasaan fisik (tidur, olahraga) dan kondisi emosional mereka
+- Pakar Grafologi: menganalisis metrik tulisan tangan (kecepatan, tekanan, tremor, kelancaran) untuk mendeteksi tanda-tanda stres atau kecemasan
+
+WAJIB mengembalikan JSON dengan struktur berikut:
+{
+  "sentiment_label": "Anxious" | "Sad" | "Angry" | "Positive" | "Neutral",
+  "sentiment_score": 0-100,
+  "handwriting_insights": "3-5 kalimat. Jelaskan APA yang ditemukan dari tulisan, KENAPA itu penting, dan BAGAIMANA hubungannya dengan perasaan. Contoh: 'Goresanmu terlihat cepat dan sedikit tremor di akhir. Biasanya ini terjadi kalau kamu lagi kelelahan atau terburu-buru. Tapi bentuk hurufnya masih rapi, artinya kamu masih punya kendali.'",
+  "mood_stress_correlation": "3-5 kalimat. Hubungkan data fisik (tidur, olahraga, durasi nulis) dengan metrik tulisan dan emosi. Contoh: 'Kurang tidur bikin goresanmu kurang stabil. Ditambah durasi nulis yang pendek, sepertinya kamu nggak punya banyak waktu untuk diri sendiri hari ini.'",
+  "recommendations": "3-5 kalimat. Saran mikro-intervensi yang spesifik dan personal. Contoh: 'Coba latihan 4-7-8: tarik napas 4 detik, tahan 7, buang 8. Ulang 4 kali. Kalau punya waktu 5 menit, coba tulis 3 hal yang kamu syukuri hari ini.' JANGAN memberi saran medis atau diagnosis klinis.",
+  "stress_score": 0-100,
+  "mood_score": 0-100,
+  "future_mood_prediction": [4 integer 0-100 untuk 4 hari ke depan]
+}
+RULES: Jangan diagnosis klinis. Jangan resep obat. Gunakan bahasa Indonesia santai. Setiap string minimal 3 kalimat."""
             },
             {
                 "role": "user",
