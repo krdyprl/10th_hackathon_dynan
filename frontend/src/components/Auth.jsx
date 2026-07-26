@@ -9,6 +9,9 @@ export default function Auth() {
   const [age, setAge] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
   const [message, setMessage] = useState('')
+  const [showForgot, setShowForgot] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetSent, setResetSent] = useState(false)
 
   const handleAuth = async (e) => {
     e.preventDefault()
@@ -28,6 +31,23 @@ export default function Auth() {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
       }
+    } catch (err) {
+      setMessage(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (!resetEmail) return
+    setLoading(true)
+    setMessage('')
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: window.location.origin,
+      })
+      if (error) throw error
+      setResetSent(true)
     } catch (err) {
       setMessage(err.message)
     } finally {
@@ -68,27 +88,75 @@ export default function Auth() {
           </p>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-4">
-          {isSignUp && (
-            <>
-              <input type="text" placeholder="Nama Lengkap" value={fullName}
-                onChange={e => setFullName(e.target.value)} className={inputClass} required />
-              <input type="number" placeholder="Umur" value={age}
-                onChange={e => setAge(e.target.value)} min="10" max="100" className={inputClass} />
-            </>
-          )}
-          <input type="email" placeholder="Email" value={email}
-            onChange={e => setEmail(e.target.value)} className={inputClass} required />
-          <input type="password" placeholder="Password" value={password}
-            onChange={e => setPassword(e.target.value)} className={inputClass} required minLength={6} />
+        {showForgot ? (
+          <div className="space-y-4 animate-fadeIn">
+            <h2 className="text-lg font-semibold text-center" style={{ color: 'var(--color-text)' }}>Reset Password</h2>
+            <p className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>
+              Masukkan email yang terdaftar. Kami akan kirim tautan reset.
+            </p>
+            {!resetSent ? (
+              <>
+                <input type="email" placeholder="Email" value={resetEmail}
+                  onChange={e => setResetEmail(e.target.value)} className={inputClass} required />
+                <button onClick={handleResetPassword} disabled={loading || !resetEmail}
+                  className="w-full text-white font-medium text-sm py-3 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                  style={{ backgroundColor: 'var(--color-pilar-stres)' }}>
+                  {loading ? 'Mengirim...' : 'Kirim Tautan Reset'}
+                </button>
+                <button onClick={() => { setShowForgot(false); setMessage('') }}
+                  className="w-full text-xs py-2 cursor-pointer hover:underline"
+                  style={{ color: 'var(--color-text-muted)' }}>
+                  ← Kembali ke Login
+                </button>
+              </>
+            ) : (
+              <div className="text-center space-y-3 py-4">
+                <div className="text-3xl">✉️</div>
+                <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>Cek email kamu!</p>
+                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                  Tautan reset password sudah dikirim ke <strong>{resetEmail}</strong>
+                </p>
+                <button onClick={() => { setShowForgot(false); setResetSent(false); setResetEmail(''); setMessage('') }}
+                  className="text-xs font-medium cursor-pointer hover:underline"
+                  style={{ color: 'var(--color-pilar-stres)' }}>
+                  Kembali ke Login
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <form onSubmit={handleAuth} className="space-y-4">
+            {isSignUp && (
+              <>
+                <input type="text" placeholder="Nama Lengkap" value={fullName}
+                  onChange={e => setFullName(e.target.value)} className={inputClass} required />
+                <input type="number" placeholder="Umur" value={age}
+                  onChange={e => setAge(e.target.value)} min="10" max="100" className={inputClass} />
+              </>
+            )}
+            <input type="email" placeholder="Email" value={email}
+              onChange={e => setEmail(e.target.value)} className={inputClass} required />
+            <input type="password" placeholder="Password" value={password}
+              onChange={e => setPassword(e.target.value)} className={inputClass} required minLength={6} />
 
-          <button type="submit" disabled={loading}
-            className="w-full text-white font-medium text-sm py-3 rounded-xl transition-all cursor-pointer disabled:opacity-50"
-            style={{ backgroundColor: 'var(--color-text)' }}>
-            {loading ? 'Memproses...' : isSignUp ? 'Daftar' : 'Masuk'}
-          </button>
-        </form>
+            <button type="submit" disabled={loading}
+              className="w-full text-white font-medium text-sm py-3 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+              style={{ backgroundColor: 'var(--color-text)' }}>
+              {loading ? 'Memproses...' : isSignUp ? 'Daftar' : 'Masuk'}
+            </button>
 
+            {!isSignUp && (
+              <button type="button" onClick={() => { setShowForgot(true); setMessage('') }}
+                className="w-full text-xs text-center cursor-pointer hover:underline"
+                style={{ color: 'var(--color-text-muted)' }}>
+                Lupa Password?
+              </button>
+            )}
+          </form>
+        )}
+
+        {!showForgot && (
+          <>
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t" style={{ borderColor: 'var(--color-border)' }} />
@@ -125,6 +193,8 @@ export default function Auth() {
             {message}
           </div>
         )}
+          </>
+      )}
       </div>
     </div>
   )
