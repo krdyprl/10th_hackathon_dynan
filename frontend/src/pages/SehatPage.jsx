@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabase'
 export default function SehatPage() {
   const [sleepHours, setSleepHours] = useState(7)
   const [exerciseStatus, setExerciseStatus] = useState('no')
+  const [proofPhoto, setProofPhoto] = useState(null)
+  const [proofPreview, setProofPreview] = useState(null)
   const [streak, setStreak] = useState(0)
   const [streakLogs, setStreakLogs] = useState([])
   const [saved, setSaved] = useState(false)
@@ -121,6 +123,29 @@ export default function SehatPage() {
           <option value="yes">Ya (minimal 15 menit)</option>
           <option value="skipped">Tidak hari ini (tapi besok)</option>
         </select>
+
+        {exerciseStatus === 'yes' && (
+          <div className="mt-3 animate-fadeIn">
+            <span className="text-xs block mb-2" style={{ color: 'var(--color-text-muted)' }}>Upload bukti olahraga (foto selfie / screenshot Strava):</span>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm cursor-pointer bg-white hover:bg-[var(--color-surface)]" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text)' }}>
+                📸 Pilih Foto
+                <input type="file" accept="image/*" capture="environment" className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) { setProofPhoto(f); setProofPreview(URL.createObjectURL(f)) } }} />
+              </label>
+              <label className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm cursor-pointer bg-white hover:bg-[var(--color-surface)]" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text)' }}>
+                🤳 Buka Kamera
+                <input type="file" accept="image/*" capture="user" className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) { setProofPhoto(f); setProofPreview(URL.createObjectURL(f)) } }} />
+              </label>
+            </div>
+            {proofPreview && (
+              <div className="mt-2">
+                <img src={proofPreview} alt="proof" className="h-24 rounded-xl border" style={{ borderColor: 'var(--color-border)' }} />
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Save + Streak */}

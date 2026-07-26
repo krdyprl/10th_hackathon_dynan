@@ -7,6 +7,8 @@ const hotlines = [
   { name: 'Into The Light', detail: 'intothelightid.org', type: 'url', action: () => window.open('https://intothelightid.org', '_blank') },
   { name: 'Yayasan Pulih', detail: 'pulihfoundation.org', type: 'url', action: () => window.open('https://pulihfoundation.org', '_blank') },
   { name: 'PSYCHOLOGI Hotline', detail: '021-1234-5678', type: 'phone', action: () => window.open('tel:02112345678') },
+  { name: 'LISA Suicide Prevention', detail: '+62 811 3855 472', type: 'phone', action: () => window.open('https://wa.me/628113855472', '_blank'), wa: true },
+  { name: 'LISA (English)', detail: '+62 811 3815 472', type: 'phone', action: () => window.open('https://wa.me/628113815472', '_blank'), wa: true },
 ]
 
 const selfCareTips = [
@@ -40,7 +42,7 @@ export default function DaruratPage() {
               <strong style={{ color: 'var(--color-text)' }}>{h.name}</strong>
               <span className="flex items-center gap-1 text-xs font-mono" style={{ color: 'var(--color-pilar-darurat)' }}>
                 {h.detail}
-                {h.type === 'url' ? <ExternalLink className="w-3 h-3" /> : <Phone className="w-3 h-3" />}
+                {h.wa ? '💬' : h.type === 'url' ? <ExternalLink className="w-3 h-3" /> : <Phone className="w-3 h-3" />}
               </span>
             </button>
           ))}
