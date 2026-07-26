@@ -82,7 +82,10 @@ export default function BantuanPage() {
         <div className="space-y-3">
           {helplines.length === 0 && !error && (
             <div className="p-6 rounded-2xl border bg-white text-center" style={{ borderColor: 'var(--color-border)' }}>
-              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Tidak ditemukan fasilitas kesehatan di sekitar.</p>
+              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Tidak ditemukan fasilitas di sekitar lokasi.</p>
+              <p className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
+                Coba refresh lokasi atau lihat halaman <a href="/darurat" style={{ color: 'var(--color-pilar-darurat)' }}>Pencegahan Risiko</a> untuk hotline nasional.
+              </p>
             </div>
           )}
 
