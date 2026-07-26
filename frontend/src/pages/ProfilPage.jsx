@@ -168,6 +168,40 @@ export default function ProfilPage() {
         )}
       </div>
 
+      {/* Settings */}
+      <div className="p-5 rounded-2xl border bg-white mb-4" style={{ borderColor: 'var(--color-border)' }}>
+        <span className="text-xs font-semibold uppercase tracking-wider block mb-3" style={{ color: 'var(--color-text)' }}>⚙️ Pengaturan Profil</span>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs block mb-1" style={{ color: 'var(--color-text-muted)' }}>Nama Lengkap</label>
+            <input type="text" id="edit-name"
+              className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none bg-[var(--color-surface)]"
+              style={{ borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+              defaultValue={profile?.user_metadata?.full_name || ''} />
+          </div>
+          <div>
+            <label className="text-xs block mb-1" style={{ color: 'var(--color-text-muted)' }}>Email</label>
+            <input type="email" className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none bg-[var(--color-surface)] opacity-60" readOnly
+              style={{ borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+              value={profile?.email || ''} />
+          </div>
+          <button onClick={() => supabase.auth.resetPasswordForEmail(profile?.email)}
+            className="w-full py-2.5 rounded-xl text-sm font-medium border cursor-pointer hover:bg-[var(--color-surface)]"
+            style={{ borderColor: 'var(--color-border)', color: 'var(--color-text)' }}>
+            🔑 Ganti Password
+          </button>
+          <button onClick={() => {
+            const name = document.getElementById('edit-name').value
+            if (name && name !== profile?.user_metadata?.full_name) {
+              supabase.auth.updateUser({ data: { full_name: name } }).then(() => { setProfile(p => ({ ...p, user_metadata: { ...p?.user_metadata, full_name: name } })) })
+            }
+          }} className="w-full py-2.5 rounded-xl text-sm font-medium text-white cursor-pointer"
+            style={{ backgroundColor: 'var(--color-text)' }}>
+            Simpan
+          </button>
+        </div>
+      </div>
+
       {/* Logout */}
       <button onClick={handleLogout}
         className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium text-white cursor-pointer"

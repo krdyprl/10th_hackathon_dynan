@@ -88,8 +88,10 @@ async def analyze_journal(
         if stress > 70:
             user_profile = supabase.table("users").select("full_name").eq("id", user.id).execute()
             user_name = user_profile.data[0]["full_name"] if user_profile.data else user.email
-            contacts = [{"name": "Trusted Circle", "type": "email", "value": user.email}]
-            notify_trusted_circle(user_name=user_name, stress_score=stress, contacts=contacts)
+            tc = supabase.table("trusted_circles").select("*").eq("user_id", user.id).execute()
+            contacts = [{"name": r["contact_name"], "type": r["contact_type"], "value": r["contact_value"]} for r in tc.data] if tc.data else []
+            if contacts:
+                notify_trusted_circle(user_name=user_name, stress_score=stress, contacts=contacts)
 
         return response_data
 

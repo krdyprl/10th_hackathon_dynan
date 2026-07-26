@@ -49,12 +49,12 @@ export default function LiterasiPage() {
     try {
       const headers = await getHeaders()
       const res = await fetch('http://localhost:8000/api/history?range=30', { headers })
-      if (!res.ok) return
+      if (!res.ok) { console.warn('Timeline API error:', res.status); return }
       const data = await res.json()
       if (data.entries) {
         setTimeline(data.entries.sort((a, b) => new Date(b.date) - new Date(a.date)))
       }
-    } catch {}
+    } catch (e) { console.warn('Timeline fetch failed:', e) }
     setLoadingTimeline(false)
   }
 
