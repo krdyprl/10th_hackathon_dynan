@@ -1,0 +1,552 @@
+I'll answer as a world-class hackathon product strategist and AI PM, winner of multiple university and international AI hackathons.
+
+**TL;DR**: Saya tidak akan membuat "AI pendeteksi depresi". Masalah nyata Gen Z tahun 2026 bukan kurangnya aplikasi mental health, tetapi **mereka berhenti melakukan refleksi diri dan mencari bantuan sebelum kondisinya memburuk**. Saya akan membangun produk yang menangkap perubahan perilaku secara pasif melalui handwriting journaling, lalu menggunakan AI untuk memberikan insight personal dan mendorong tindakan kecil sebelum terjadi krisis.
+
+---
+
+# Ide
+
+## InkTrace AI
+
+**"Your handwriting remembers what your mind ignores."**
+
+Platform journaling berbasis tulisan tangan yang menganalisis **perubahan pola menulis dan isi jurnal dari waktu ke waktu** untuk membantu pengguna mengenali peningkatan stres dan memberikan intervensi mikro yang personal.
+
+Bukan diagnosis.
+
+Bukan terapi.
+
+Tetapi **early self-awareness system**.
+
+---
+
+# Kenapa masalah ini?
+
+Data menunjukkan Gen Z sudah sadar pentingnya kesehatan mental.
+
+Masalahnya bukan awareness.
+
+Masalahnya adalah **consistency**.
+
+Mereka:
+
+* download aplikasi journaling
+* pakai 3 hari
+* berhenti
+
+atau
+
+* sadar sedang burnout
+* tidak tahu kapan mulai memburuk
+* baru mencari bantuan ketika sudah parah.
+
+Artinya masalah utamanya adalah
+
+> Tidak ada sistem yang dapat menangkap perubahan kondisi psikologis secara alami dan berkelanjutan.
+
+---
+
+# Five Whys
+
+### Problem
+
+Gen Z sering terlambat menyadari kondisi mentalnya memburuk.
+
+---
+
+Why 1
+
+Kenapa?
+
+Karena perubahan stres terjadi perlahan.
+
+---
+
+Why 2
+
+Kenapa tidak sadar?
+
+Karena manusia sulit membandingkan kondisi emosinya minggu ini dengan bulan lalu.
+
+---
+
+Why 3
+
+Kenapa?
+
+Karena journaling hanya menjadi arsip tulisan.
+
+Tidak ada insight.
+
+---
+
+Why 4
+
+Kenapa tidak ada insight?
+
+Karena aplikasi hanya membaca isi teks.
+
+Tidak membaca perilaku menulis.
+
+---
+
+Why 5
+
+Kenapa perilaku menulis tidak dianalisis?
+
+Karena membutuhkan kombinasi
+
+* handwriting
+* OCR
+* AI
+* longitudinal analysis
+
+yang belum umum pada aplikasi journaling.
+
+---
+
+## Root Cause
+
+> Refleksi diri masih bersifat pasif dan episodik, sehingga perubahan psikologis kecil tidak terdeteksi sebelum berkembang menjadi masalah yang lebih serius.
+
+---
+
+# Solution Statement
+
+InkTrace AI mengubah aktivitas menulis harian menjadi data perilaku yang dianalisis AI untuk membantu pengguna mengenali perubahan emosinya lebih awal.
+
+---
+
+# AI yang Beyond
+
+Mayoritas hackathon akan seperti ini
+
+```
+Text
+
+↓
+
+LLM
+
+↓
+
+Mood
+```
+
+atau
+
+```
+Chatbot
+
+↓
+
+LLM
+```
+
+Sudah terlalu umum.
+
+Saya akan membuat
+
+```
+Handwriting
+
+↓
+
+Stroke Analysis
+
+↓
+
+OCR
+
+↓
+
+LLM
+
+↓
+
+Longitudinal AI
+
+↓
+
+Insight
+```
+
+AI tidak hanya membaca kata.
+
+AI membaca
+
+* bagaimana kamu menulis
+* seberapa cepat
+* seberapa sering menghapus
+* seberapa besar tulisan berubah
+* bagaimana perubahan itu selama berminggu-minggu.
+
+---
+
+# MVP
+
+## 1.
+
+Daily Handwriting Journal
+
+User menulis langsung menggunakan mouse/stylus.
+
+Output
+
+* PNG
+* Stroke JSON
+
+---
+
+## 2.
+
+Visual Analysis AI
+
+Menghitung
+
+* writing speed
+* pen lift
+* stroke count
+* erase count
+* writing area
+* slant
+* spacing
+* duration
+
+Semua otomatis.
+
+---
+
+## 3.
+
+OCR
+
+Mengubah tulisan menjadi teks.
+
+---
+
+## 4.
+
+LLM Reflection Engine
+
+Bukan
+
+> "Kamu depresi."
+
+Tetapi
+
+> "Selama 10 hari terakhir tulisanmu semakin lambat dan isi jurnal lebih banyak menggunakan kata bernada negatif. Mungkin ada baiknya meluangkan waktu untuk beristirahat atau berbicara dengan seseorang yang dipercaya."
+
+Lebih etis.
+
+---
+
+## 5.
+
+Trend AI
+
+Bukan hasil hari ini.
+
+Tetapi
+
+```
+7 hari
+
+30 hari
+
+90 hari
+```
+
+Perubahan
+
+* emosi
+* tulisan
+* perilaku
+
+---
+
+## 6.
+
+Micro Intervention
+
+Misalnya
+
+Hari ini
+
+AI melihat
+
+* stres naik
+* tidur turun
+* tulisan berubah
+
+LLM menghasilkan
+
+* breathing exercise
+* journaling prompt
+* gratitude challenge
+* walking challenge
+
+Personal.
+
+---
+
+# Tech Stack
+
+Frontend
+
+Next.js
+
+React Sketch Canvas
+
+Tailwind
+
+Backend
+
+FastAPI
+
+Python
+
+Supabase
+
+Storage
+
+Postgres
+
+pgvector
+
+AI
+
+OpenAI API
+
+PaddleOCR
+
+OpenCV
+
+Scikit-learn
+
+Deployment
+
+Vercel
+
+Railway
+
+---
+
+# Database
+
+```
+users
+
+journals
+
+stroke_data
+
+ocr_result
+
+visual_features
+
+llm_analysis
+
+history
+```
+
+---
+
+# Pipeline
+
+```
+Canvas
+
+↓
+
+Stroke JSON
+
+↓
+
+Supabase
+
+↓
+
+OpenCV
+
+↓
+
+Feature Extraction
+
+↓
+
+OCR
+
+↓
+
+LLM
+
+↓
+
+Insight
+
+↓
+
+Dashboard
+```
+
+---
+
+# Kenapa AI ini unik?
+
+Karena AI mempunyai tiga layer.
+
+Layer 1
+
+Visual AI
+
+Melihat
+
+cara menulis.
+
+---
+
+Layer 2
+
+Language AI
+
+Melihat
+
+apa yang ditulis.
+
+---
+
+Layer 3
+
+Behavior AI
+
+Melihat
+
+bagaimana perubahan pengguna dari minggu ke minggu.
+
+Mayoritas peserta hanya punya Layer 2.
+
+---
+
+# Mapping ke Penilaian Hacker
+
+### Full-stack MVP
+
+* Next.js
+* FastAPI
+* Supabase
+* Vercel
+* Railway
+
+Deploy URL publik.
+
+---
+
+### Pipeline penuh
+
+```
+Canvas
+
+↓
+
+Supabase
+
+↓
+
+Feature Extraction
+
+↓
+
+OCR
+
+↓
+
+LLM
+
+↓
+
+Dashboard
+```
+
+Tidak ada mock.
+
+Semua berjalan.
+
+---
+
+### Database
+
+Supabase
+
+* Auth
+* Storage
+* PostgreSQL
+* pgvector
+
+---
+
+### LLM API
+
+OpenAI
+
+atau
+
+Gemini
+
+---
+
+### GitHub
+
+```
+frontend
+
+backend
+
+README
+
+PRD.md
+
+API.md
+
+ERD
+
+commit history
+```
+
+---
+
+# Kenapa cocok dengan tema?
+
+**Pengelolaan stres**
+
+* Visual Analysis + Trend AI mendeteksi perubahan pola stres.
+* Micro Intervention memberikan latihan singkat (breathing, gratitude, journaling).
+
+**Dukungan sosial**
+
+* AI menyarankan pengguna membagikan ringkasan kondisi kepada teman atau keluarga yang dipilih jika pola memburuk.
+* Fitur "Trusted Circle" memungkinkan pengguna membagikan insight, bukan isi jurnal, sehingga privasi tetap terjaga.
+
+**Literasi**
+
+* Setiap insight AI disertai edukasi singkat berbasis bukti, misalnya mengapa pola tidur atau stres memengaruhi kesejahteraan.
+
+**Kebiasaan sehat**
+
+* Daily handwriting journal membangun rutinitas refleksi.
+* AI memberi target kecil yang realistis, bukan target besar yang sulit dipertahankan.
+
+**Akses bantuan**
+
+* Jika pola risiko meningkat selama beberapa hari berturut-turut, sistem menampilkan daftar layanan bantuan dan mendorong pengguna berkonsultasi dengan profesional. Tidak mengklaim diagnosis.
+
+**Pencegahan risiko**
+
+* Fokus produk adalah **deteksi perubahan pola secara longitudinal**, sehingga pengguna mendapat peringatan dini sebelum masalah berkembang, bukan setelah terjadi krisis.
+
+## Nilai inovasi yang menurut saya paling kuat
+
+Sebagian besar solusi kesehatan mental saat ini bersifat **reaktif**: pengguna baru membuka aplikasi ketika merasa tidak baik-baik saja.
+
+InkTrace AI mengubah aktivitas sederhana—menulis jurnal dengan tangan—menjadi sinyal perilaku yang dianalisis secara multimodal (visual + linguistik + temporal). Fokusnya bukan menebak apakah seseorang mengalami depresi, tetapi membantu pengguna mengenali **perubahan bertahap pada dirinya sendiri** dan mengambil tindakan kecil lebih awal. Itu adalah pendekatan yang lebih realistis, lebih etis, dan lebih sesuai dengan kebutuhan Gen Z pada tahun 2026.
+
