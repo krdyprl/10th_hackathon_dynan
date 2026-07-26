@@ -11,6 +11,7 @@ build/
 .cache/
 *.tsbuildinfo
 __pycache__/
+.vite/
 *.pyc
 *.pyo
 *.pyd
