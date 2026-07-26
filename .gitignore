@@ -1,17 +1,28 @@
+# Node & Dependencies
 node_modules/
-.env
-.env.local
-.env.*.local
-*.log
-npm-debug.log*
-.DS_Store
 dist/
 build/
 .next/
 .cache/
-*.tsbuildinfo
-__pycache__/
 .vite/
+.netlify/
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS specific files
+.DS_Store
+Thumbs.db
+db.sqlite3
+
+# Python specific files
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
@@ -22,10 +33,21 @@ venv/
 .venv/
 .pytest_cache/
 .pytest_cache*/
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# Hackathon / Temporary items
 problem.txt
 session-ses_*.md
 Dataset *.json
 list.md
 
-# Local Netlify folder
-.netlify
+Referensi/
