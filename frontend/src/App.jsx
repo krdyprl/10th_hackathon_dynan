@@ -2,8 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { JournalCanvas } from './components/JournalCanvas';
 import { HandwritingRadarChart } from './components/HandwritingRadarChart';
 import { MoodTrendChart } from './components/MoodTrendChart';
+import Auth from './components/Auth';
+import { supabase } from './lib/supabase';
 
 export default function App() {
+  const [session, setSession] = useState(null);
+  const [loadingSession, setLoadingSession] = useState(true);
   const canvasRef = useRef(null);
   const [sleepHours, setSleepHours] = useState('7.0');
   const [exerciseStatus, setExerciseStatus] = useState('no');
@@ -41,6 +45,22 @@ export default function App() {
     { date: 'Lusa (Prediksi)', mood: 62 },
     { date: 'Hari +3 (Prediksi)', mood: 70 }
   ]);
+
+  // Auth session
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoadingSession(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   // Crisis Alert State
   const [showCrisisModal, setShowCrisisModal] = useState(false);
@@ -136,9 +156,12 @@ export default function App() {
       formData.append('duration_seconds', parseInt(durationSeconds) || 5);
       formData.append('exercise_status', exerciseStatus);
 
+      const { data: { session } } = await supabase.auth.getSession();
+
       // Call API
       const response = await fetch('http://localhost:8000/api/analyze', {
         method: 'POST',
+        headers: session ? { 'Authorization': `Bearer ${session.access_token}` } : {},
         body: formData
       });
 
@@ -252,6 +275,18 @@ export default function App() {
     setErrorMsg('');
   };
 
+  if (loadingSession) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-[#7a3dff] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Auth />;
+  }
+
   return (
     <div className="min-h-screen bg-white text-[#080808] font-sans antialiased">
       {/* Navigation Bar */}
@@ -262,6 +297,9 @@ export default function App() {
           <span className="text-[10px] font-mono border border-[#3b89ff] text-[#3b89ff] px-1.5 py-0.5 rounded-[4px] ml-2 uppercase tracking-wider">Tugas 5</span>
         </div>
         <div className="flex items-center gap-4">
+          <span className="text-xs text-[#898989] font-mono hidden md:block">
+            {session.user.email}
+          </span>
           <button
             onClick={() => {
               setIsDetoxActive(true);
@@ -270,6 +308,12 @@ export default function App() {
             className="text-[12px] font-medium tracking-[0.05em] text-[#ff6b00] border border-[#ff6b00] hover:bg-[#fffbf9] uppercase px-3 py-1.5 rounded-[4px] transition-all cursor-pointer"
           >
             Digital Detox (Jomblo Mode)
+          </button>
+          <button
+            onClick={handleLogout}
+            className="text-[12px] font-medium tracking-[0.05em] text-[#898989] border border-[#d8d8d8] hover:bg-[#fafafa] px-3 py-1.5 rounded-[4px] transition-all cursor-pointer"
+          >
+            Keluar
           </button>
         </div>
       </nav>
