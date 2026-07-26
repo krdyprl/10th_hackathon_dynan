@@ -173,7 +173,7 @@ export default function BreathingGuide({ onClose }) {
         {/* Camera Preview + Circle */}
         <div className="relative flex items-center justify-center h-56">
           {cameraOn && (
-            <div className="absolute inset-0 rounded-2xl overflow-hidden opacity-20">
+            <div className="absolute inset-0 rounded-2xl overflow-hidden opacity-80">
               <video ref={videoRef} autoPlay playsInline muted
                 className="w-full h-full object-cover scale-x-[-1]" />
               <canvas ref={canvasRef} className="hidden" />

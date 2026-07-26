@@ -3,6 +3,7 @@ import shutil
 import json
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from app.kinematics import calculate_kinematics
 from app.ai_groq import process_groq_pipeline
 from app.database import supabase
@@ -185,18 +186,23 @@ async def get_trusted_circles(user = Depends(get_current_user)):
         .execute()
     return {"contacts": result.data or []}
 
+class ContactCreate(BaseModel):
+    contact_name: str
+    contact_type: str
+    contact_value: str
+
 @app.post("/api/trusted-circles")
-async def create_trusted_circle(contact_name: str, contact_type: str, contact_value: str, user = Depends(get_current_user)):
+async def create_trusted_circle(contact: ContactCreate, user = Depends(get_current_user)):
     if not supabase:
         raise HTTPException(status_code=503, detail="Database not connected")
-    if contact_type not in ("email", "whatsapp"):
+    if contact.contact_type not in ("email", "whatsapp"):
         raise HTTPException(status_code=400, detail="Invalid contact_type")
 
     result = supabase.table("trusted_circles").insert({
         "user_id": user.id,
-        "contact_name": contact_name,
-        "contact_type": contact_type,
-        "contact_value": contact_value,
+        "contact_name": contact.contact_name,
+        "contact_type": contact.contact_type,
+        "contact_value": contact.contact_value,
     }).execute()
 
     return {"status": "created", "data": result.data[0]}
@@ -233,8 +239,6 @@ async def send_notification(contact_ids: list[str] = None, user = Depends(get_cu
     return {"results": results}
 
 # --- AI Companion ---
-
-from pydantic import BaseModel
 
 class CompanionRequest(BaseModel):
     messages: list
