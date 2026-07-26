@@ -48,49 +48,58 @@ ALTER TABLE public.llm_analyses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies: journals
+DROP POLICY IF EXISTS "Users can insert their own journals" ON public.journals;
 CREATE POLICY "Users can insert their own journals"
   ON public.journals FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view their own journals" ON public.journals;
 CREATE POLICY "Users can view their own journals"
   ON public.journals FOR SELECT
   TO authenticated
   USING (auth.uid() = user_id);
 
 -- RLS Policies: kinematic_features
+DROP POLICY IF EXISTS "Users can insert their own kinematic features" ON public.kinematic_features;
 CREATE POLICY "Users can insert their own kinematic features"
   ON public.kinematic_features FOR INSERT
   TO authenticated
   WITH CHECK (journal_id IN (SELECT id FROM public.journals WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can view their own kinematic features" ON public.kinematic_features;
 CREATE POLICY "Users can view their own kinematic features"
   ON public.kinematic_features FOR SELECT
   TO authenticated
   USING (journal_id IN (SELECT id FROM public.journals WHERE user_id = auth.uid()));
 
 -- RLS Policies: llm_analyses
+DROP POLICY IF EXISTS "Users can insert their own llm analyses" ON public.llm_analyses;
 CREATE POLICY "Users can insert their own llm analyses"
   ON public.llm_analyses FOR INSERT
   TO authenticated
   WITH CHECK (journal_id IN (SELECT id FROM public.journals WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can view their own llm analyses" ON public.llm_analyses;
 CREATE POLICY "Users can view their own llm analyses"
   ON public.llm_analyses FOR SELECT
   TO authenticated
   USING (journal_id IN (SELECT id FROM public.journals WHERE user_id = auth.uid()));
 
 -- RLS Policies: users
+DROP POLICY IF EXISTS "Users can insert their own profile" ON public.users;
 CREATE POLICY "Users can insert their own profile"
   ON public.users FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.users;
 CREATE POLICY "Users can view their own profile"
   ON public.users FOR SELECT
   TO authenticated
   USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.users;
 CREATE POLICY "Users can update their own profile"
   ON public.users FOR UPDATE
   TO authenticated
@@ -130,11 +139,13 @@ CREATE TABLE IF NOT EXISTS public.mood_logs (
 
 ALTER TABLE public.mood_logs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can insert their own mood logs" ON public.mood_logs;
 CREATE POLICY "Users can insert their own mood logs"
   ON public.mood_logs FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view their own mood logs" ON public.mood_logs;
 CREATE POLICY "Users can view their own mood logs"
   ON public.mood_logs FOR SELECT
   TO authenticated
@@ -153,16 +164,19 @@ CREATE TABLE IF NOT EXISTS public.habit_logs (
 
 ALTER TABLE public.habit_logs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can insert their own habit logs" ON public.habit_logs;
 CREATE POLICY "Users can insert their own habit logs"
   ON public.habit_logs FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view their own habit logs" ON public.habit_logs;
 CREATE POLICY "Users can view their own habit logs"
   ON public.habit_logs FOR SELECT
   TO authenticated
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own habit logs" ON public.habit_logs;
 CREATE POLICY "Users can update their own habit logs"
   ON public.habit_logs FOR UPDATE
   TO authenticated
@@ -181,6 +195,7 @@ CREATE TABLE IF NOT EXISTS public.trusted_circles (
 
 ALTER TABLE public.trusted_circles ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can manage their own trusted circles" ON public.trusted_circles;
 CREATE POLICY "Users can manage their own trusted circles"
   ON public.trusted_circles FOR ALL
   TO authenticated
