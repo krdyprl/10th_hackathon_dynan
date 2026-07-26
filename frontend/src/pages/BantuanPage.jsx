@@ -1,6 +1,13 @@
 import React, { useState } from 'react'
 import { MapPin, Phone, Clock, Navigation, Building, ExternalLink, Loader } from 'lucide-react'
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import { supabase } from '../lib/supabase'
+
+L.Icon.Default.mergeOptions({ iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png', iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png' })
+
+const userIcon = new L.Icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] })
 
 export default function BantuanPage() {
   const [gpsLocation, setGpsLocation] = useState(null)
@@ -149,8 +156,25 @@ export default function BantuanPage() {
         </div>
       )}
 
+      {/* Map */}
+      {gpsLocation && (
+        <div className="mb-4 rounded-2xl overflow-hidden border" style={{ borderColor: 'var(--color-border)', height: '300px' }}>
+          <MapContainer center={[gpsLocation.lat, gpsLocation.lon]} zoom={14} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
+            <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <Marker position={[gpsLocation.lat, gpsLocation.lon]} icon={userIcon}>
+              <Popup>📍 Lokasi kamu</Popup>
+            </Marker>
+            {helplines.map((p, i) => p.lat && p.lon && (
+              <Marker key={i} position={[p.lat, p.lon]}>
+                <Popup><strong>{p.name}</strong><br />{p.address || ''}</Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        </div>
+      )}
+
       {/* Hotline Tetap */}
-      <div className="mt-6 p-5 rounded-2xl border" style={{ borderColor: 'var(--color-pilar-darurat)', backgroundColor: 'var(--color-pilar-darurat-soft)' }}>
+      <div className="mb-4 p-5 rounded-2xl border" style={{ borderColor: 'var(--color-pilar-darurat)', backgroundColor: 'var(--color-pilar-darurat-soft)' }}>
         <span className="text-xs font-semibold uppercase tracking-wider block mb-3" style={{ color: 'var(--color-pilar-darurat)' }}>
           🆘 Butuh Bantuan Sekarang?
         </span>
