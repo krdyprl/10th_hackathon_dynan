@@ -118,3 +118,71 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
+
+-- Mood logs (daily check-in from welcome page)
+CREATE TABLE IF NOT EXISTS public.mood_logs (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  mood_score integer NOT NULL CHECK (mood_score >= 1 AND mood_score <= 5),
+  note text,
+  created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE public.mood_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can insert their own mood logs"
+  ON public.mood_logs FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can view their own mood logs"
+  ON public.mood_logs FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
+
+-- Habit logs (sleep + exercise daily)
+CREATE TABLE IF NOT EXISTS public.habit_logs (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  log_date date DEFAULT CURRENT_DATE NOT NULL,
+  sleep_hours numeric CHECK (sleep_hours >= 0 AND sleep_hours <= 24),
+  exercise_status text CHECK (exercise_status IN ('yes', 'no', 'skipped')),
+  created_at timestamp with time zone DEFAULT now() NOT NULL,
+  UNIQUE (user_id, log_date)
+);
+
+ALTER TABLE public.habit_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can insert their own habit logs"
+  ON public.habit_logs FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can view their own habit logs"
+  ON public.habit_logs FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own habit logs"
+  ON public.habit_logs FOR UPDATE
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- Trusted circles (social support contacts)
+CREATE TABLE IF NOT EXISTS public.trusted_circles (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  contact_name text NOT NULL,
+  contact_type text NOT NULL CHECK (contact_type IN ('email', 'whatsapp')),
+  contact_value text NOT NULL,
+  created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE public.trusted_circles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage their own trusted circles"
+  ON public.trusted_circles FOR ALL
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);

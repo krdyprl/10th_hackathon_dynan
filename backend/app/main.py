@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.kinematics import calculate_kinematics
 from app.ai_groq import process_groq_pipeline
 from app.database import supabase
+from app.auth import get_current_user
 from app.notifications import notify_trusted_circle
 from app.helplines import find_nearby_helplines
 
@@ -18,16 +19,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["Authorization", "Content-Type"],
 )
-
-async def get_current_user(authorization: str = None):
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Missing Authorization header")
-    try:
-        token = authorization.replace("Bearer ", "")
-        user = supabase.auth.get_user(token)
-        return user.user
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
 
 @app.post("/api/analyze")
 async def analyze_journal(
@@ -107,32 +98,135 @@ async def analyze_journal(
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
 
+@app.get("/api/helplines")
+async def get_helplines(lat: float, lon: float, radius: int = 5000):
+    return find_nearby_helplines(lat, lon, radius)
+
+# --- Mood Logs ---
+
+@app.post("/api/mood-logs")
+async def create_mood_log(mood_score: int, note: str = None, user = Depends(get_current_user)):
+    if not supabase:
+        raise HTTPException(status_code=503, detail="Database not connected")
+    if mood_score < 1 or mood_score > 5:
+        raise HTTPException(status_code=400, detail="mood_score must be 1-5")
+
+    result = supabase.table("mood_logs").insert({
+        "user_id": user.id,
+        "mood_score": mood_score,
+        "note": note or "",
+    }).execute()
+
+    return {"status": "saved", "data": result.data[0]}
+
+
 @app.get("/api/history")
-async def get_history(range: int = 7, user = Depends(get_current_user)):
+async def get_history_with_mood(range: int = 7, user = Depends(get_current_user)):
     if not supabase:
         return {"entries": []}
 
-    result = supabase.table("llm_analyses") \
-        .select("journals!inner(created_at), sentiment_label, sentiment_score, stress_score, mood_score") \
+    journal_result = supabase.table("llm_analyses") \
+        .select("journals!inner(created_at, user_id), sentiment_label, sentiment_score, stress_score, mood_score") \
         .gte("journals.created_at", f"now() - interval '{range} days'") \
         .eq("journals.user_id", user.id) \
         .order("journals.created_at", desc=True) \
         .limit(100) \
         .execute()
 
+    mood_result = supabase.table("mood_logs") \
+        .select("*") \
+        .eq("user_id", user.id) \
+        .gte("created_at", f"now() - interval '{range} days'") \
+        .order("created_at", desc=True) \
+        .limit(100) \
+        .execute()
+
     entries = []
-    for row in result.data:
+    for row in journal_result.data:
         entries.append({
+            "type": "journal",
             "date": row["journals"]["created_at"],
             "sentiment_label": row["sentiment_label"],
             "sentiment_score": row["sentiment_score"],
             "stress_score": row["stress_score"],
             "mood_score": row["mood_score"],
         })
+    for row in mood_result.data:
+        mood_desc = {1: "Sangat Buruk", 2: "Buruk", 3: "Biasa", 4: "Baik", 5: "Sangat Baik"}
+        entries.append({
+            "type": "mood",
+            "date": row["created_at"],
+            "sentiment_label": mood_desc.get(row["mood_score"], "Biasa"),
+            "sentiment_score": row["mood_score"] * 20,
+            "mood_score": row["mood_score"] * 20,
+            "stress_score": None,
+            "note": row.get("note", ""),
+        })
 
-    entries.reverse()
+    entries.sort(key=lambda e: e["date"])
     return {"entries": entries}
 
-@app.get("/api/helplines")
-async def get_helplines(lat: float, lon: float, radius: int = 5000):
-    return find_nearby_helplines(lat, lon, radius)
+# --- Habits — using habits router ---
+
+from app.habits import router as habits_router
+app.include_router(habits_router)
+
+# --- Trusted Circles ---
+
+@app.get("/api/trusted-circles")
+async def get_trusted_circles(user = Depends(get_current_user)):
+    if not supabase:
+        return {"contacts": []}
+    result = supabase.table("trusted_circles") \
+        .select("*") \
+        .eq("user_id", user.id) \
+        .order("created_at") \
+        .execute()
+    return {"contacts": result.data or []}
+
+@app.post("/api/trusted-circles")
+async def create_trusted_circle(contact_name: str, contact_type: str, contact_value: str, user = Depends(get_current_user)):
+    if not supabase:
+        raise HTTPException(status_code=503, detail="Database not connected")
+    if contact_type not in ("email", "whatsapp"):
+        raise HTTPException(status_code=400, detail="Invalid contact_type")
+
+    result = supabase.table("trusted_circles").insert({
+        "user_id": user.id,
+        "contact_name": contact_name,
+        "contact_type": contact_type,
+        "contact_value": contact_value,
+    }).execute()
+
+    return {"status": "created", "data": result.data[0]}
+
+@app.delete("/api/trusted-circles/{contact_id}")
+async def delete_trusted_circle(contact_id: str, user = Depends(get_current_user)):
+    if not supabase:
+        raise HTTPException(status_code=503, detail="Database not connected")
+    result = supabase.table("trusted_circles") \
+        .delete() \
+        .eq("id", contact_id) \
+        .eq("user_id", user.id) \
+        .execute()
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    return {"status": "deleted"}
+
+# --- Notify ---
+
+@app.post("/api/notify")
+async def send_notification(contact_ids: list[str] = None, user = Depends(get_current_user)):
+    if not supabase:
+        return {"status": "skipped", "reason": "No database"}
+
+    query = supabase.table("trusted_circles").select("*").eq("user_id", user.id)
+    if contact_ids:
+        query = query.in_("id", contact_ids)
+    contacts = query.execute().data
+
+    user_profile = supabase.table("users").select("full_name").eq("id", user.id).execute()
+    user_name = user_profile.data[0]["full_name"] if user_profile.data else user.email
+
+    results = notify_trusted_circle(user_name=user_name, stress_score=80, contacts=contacts or [])
+    return {"results": results}
