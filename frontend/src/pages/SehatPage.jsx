@@ -290,12 +290,12 @@ export default function SehatPage() {
             <div className="flex gap-2">
               <label className="flex-1 text-center py-2 rounded-xl border text-xs cursor-pointer bg-white">
                 📸 Pilih Foto
-                <input type="file" accept="image/*" className="hidden"
+                <input type="file" accept="image/*" className="sr-only"
                   onChange={e => { const f = e.target.files?.[0]; if (f) setProofPreview(URL.createObjectURL(f)) }} />
               </label>
               <label className="flex-1 text-center py-2 rounded-xl border text-xs cursor-pointer bg-white">
                 🤳 Kamera
-                <input type="file" accept="image/*" capture="user" className="hidden"
+                <input type="file" accept="image/*" capture="user" className="sr-only"
                   onChange={e => { const f = e.target.files?.[0]; if (f) setProofPreview(URL.createObjectURL(f)) }} />
               </label>
             </div>
