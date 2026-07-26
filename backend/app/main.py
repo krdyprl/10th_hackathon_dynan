@@ -7,6 +7,7 @@ from app.kinematics import calculate_kinematics
 from app.ai_groq import process_groq_pipeline
 from app.database import supabase
 from app.notifications import notify_trusted_circle
+from app.helplines import find_nearby_helplines
 
 app = FastAPI()
 
@@ -131,3 +132,7 @@ async def get_history(range: int = 7, user = Depends(get_current_user)):
 
     entries.reverse()
     return {"entries": entries}
+
+@app.get("/api/helplines")
+async def get_helplines(lat: float, lon: float, radius: int = 5000):
+    return find_nearby_helplines(lat, lon, radius)
