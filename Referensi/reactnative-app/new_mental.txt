@@ -1,0 +1,58 @@
+# 🚀 INKTRACE AI: MASTER PITCH & BLUEPRINT
+
+**Tagline:** *"Your handwriting remembers what your mind ignores."*[cite: 6]
+**Posisi Produk:** Sistem *early self-awareness* berbasis jurnal tulisan tangan, BUKAN aplikasi diagnosis medis[cite: 6].
+
+## 1. Akar Masalah & Solusi
+*   **Masalah Utama:** Gen Z terlambat menyadari kondisi mental mereka memburuk karena perubahan stres terjadi perlahan, dan refleksi diri saat ini masih bersifat pasif/episodik[cite: 6].
+*   **Root Cause:** Aplikasi kesehatan mental saat ini bersifat reaktif (baru dipakai saat sudah krisis) dan hanya membaca isi teks, tidak membaca perilaku menulis[cite: 6].
+*   **Solusi (Nilai Inovasi):** Mengubah aktivitas menulis harian menjadi data perilaku yang dianalisis AI untuk membantu pengguna mengenali perubahan emosinya lebih awal[cite: 6]. Pendekatan ini menganalisis secara multimodal (visual + linguistik + temporal)[cite: 6].
+
+---
+
+## 2. Arsitektur AI (The 3-Layer Fusion Engine)
+
+Sistem ini tidak hanya menggunakan LLM biasa, melainkan menggabungkan tiga dimensi data[cite: 6].
+
+1.  **Layer 1 (Visual AI - *How you write*):** Mengekstrak *writing speed, pen lift, stroke count, erase count, slant*, dan *spacing*[cite: 6].
+2.  **Layer 2 (Language AI - *What you write*):** Menggunakan PaddleOCR untuk mengubah tulisan menjadi teks[cite: 6]. Kemudian LLM digunakan untuk menganalisis kata bernada negatif[cite: 6].
+3.  **Layer 3 (Behavior AI - *How you change*):** Membandingkan perubahan perilaku dan tulisan selama 7, 30, dan 90 hari[cite: 6].
+
+### Alur Data (*Pipeline*) yang Disempurnakan
+1. **[Jam 20:00]** -> Prompt netral: "Bagian mana dari hari ini yang ingin kamu ingat (atau lupakan)?" 
+2. **[Canvas Tulisan Tangan]** -> Output: PNG & Stroke JSON[cite: 6].
+3. **[Privacy by Design]** -> Ekstrak Fitur Visual -> Ekstrak OCR -> **HANCURKAN FILE PNG** (Hanya simpan angka & teks terenkripsi).
+4. **[Kalibrasi Baseline]** -> Sistem mengecek apakah ini 7 hari pertama. Jika ya, catat sebagai standar normal pengguna. Jika tidak, ukur penyimpangannya.
+5. **[Fusion Engine]** -> Gabungkan (Data Visual + Data Teks + Riwayat 30 Hari).
+6. **[Daily Insight]** -> Tampilkan paragraf refleksi yang empatik dan dorongan tindakan kecil[cite: 6].
+
+---
+
+## 3. Integrasi API & Pemetaan 6 Pilar Kesejahteraan
+
+Strategi ini memastikan biaya operasional aplikasi tetap rendah (hemat token LLM) dengan mengandalkan ekosistem API gratis, sementara LLM hanya fokus pada analisis psikologis inti.
+
+| Pilar (Indikator) | Fitur Utama | Integrasi API Gratis | Enhancement Alur AI |
+| :--- | :--- | :--- | :--- |
+| **Pengelolaan Stres** | *Micro Intervention* & *Visual Analysis*[cite: 6]. | **Quotes Generator API** / **Doa Doa API**. | **Mood Router:** Saat *Visual AI* mendeteksi tulisan cepat/banyak tekanan, AI memanggil API kutipan atau doa untuk menenangkan pengguna dengan instan tanpa *generate* teks dari nol. |
+| **Dukungan Sosial** | Fitur *Trusted Circle*[cite: 6]. | **Telegram Bot API** / **SMTP Nodemailer**. | **Automated Social Ping:** Jika pola emosi memburuk, sistem memicu *bot* Telegram atau *email* gratis untuk mengirim notifikasi sapaan diam-diam ke grup/kontak *Trusted Circle* pengguna. |
+| **Akses Bantuan** | Direktori Layanan Bantuan[cite: 6]. | **Places API Indonesia**. | **Smart Routing:** Jika deteksi krisis memuncak, sistem bebas halusinasi. AI memicu *Places API* untuk memberikan koordinat akurat biro psikologi terdekat dari lokasi GPS pengguna. |
+| **Literasi** | Edukasi berbasis bukti pada *Daily Insight*[cite: 6]. | *Tidak pakai API luar, fokus ke LLM System Prompt.* | **Psychoeducation Prompt:** Setiap wawasan harian disertai edukasi singkat berbasis bukti mengapa suatu pola memengaruhi kesejahteraan[cite: 6]. |
+| **Kebiasaan Sehat** | *Daily Handwriting Journal*[cite: 6]. | *Internal Logic.* | **Behavioral Modality Switching:** Jika sistem mendeteksi *stroke count* yang sangat minim karena energi rendah, AI beradaptasi dengan menurunkan target jurnal harian agar rutinitas refleksi terbangun[cite: 6]. |
+| **Pencegahan Risiko** | Sistem *Longitudinal Analysis*[cite: 6]. | *Internal Database (pgvector).* | **Early Warning System:** Membandingkan tren dari hari ke-1 hingga ke-90 untuk memberikan peringatan dini sebelum masalah berkembang[cite: 6]. |
+
+---
+
+## 4. System Prompt LLM (Refleksi, Bukan Diagnosis)
+
+Untuk memastikan *Daily Insight* bertindak sebagai *journaling companion* yang etis dan tidak mendiagnosis, berikut adalah instruksi (*system prompt*) yang ditanamkan di dalam LLM:
+
+> **System Prompt untuk LLM (Fusion Engine Output):**
+> "Anda adalah InkTrace, asisten refleksi jurnal yang empatik. Anda menerima 3 input: Fitur Visual (cara menulis), Teks Jurnal (isi), dan Data Riwayat (tren). 
+> 
+> Tugas Anda: Buat satu paragraf singkat (maksimal 3 kalimat) yang merangkum hari pengguna berdasarkan perbandingan dengan minggu lalunya. 
+> Aturan ketat: 
+> 1. JANGAN PERNAH memberikan diagnosis medis (seperti depresi, anxiety).
+> 2. JANGAN menghakimi perasaan negatif.
+> 3. Gunakan bahasa yang suportif.
+> 4. Akhiri dengan satu saran tindakan yang sangat kecil (micro-intervention) seperti latihan bernapas atau tantangan rasa syukur."[cite: 6]
