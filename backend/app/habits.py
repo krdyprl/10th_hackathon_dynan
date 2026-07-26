@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from app.database import supabase
 from app.auth import get_current_user
 
@@ -12,6 +12,8 @@ async def save_habits(
     log_date: str = None,
     user = Depends(get_current_user)
 ):
+    if not supabase:
+        raise HTTPException(status_code=503, detail="Database not connected")
     result = supabase.table("habit_logs").upsert({
         "user_id": user.id,
         "log_date": log_date or str(date.today()),
@@ -23,6 +25,8 @@ async def save_habits(
 
 @router.get("/api/habits")
 async def get_habits(log_date: str = None, user = Depends(get_current_user)):
+    if not supabase:
+        return {"habits": None}
     target_date = log_date or str(date.today())
     result = supabase.table("habit_logs") \
         .select("*") \
@@ -35,6 +39,8 @@ async def get_habits(log_date: str = None, user = Depends(get_current_user)):
 
 @router.get("/api/habits/streak")
 async def get_streak(user = Depends(get_current_user)):
+    if not supabase:
+        return {"streak": 0, "logs": []}
     result = supabase.table("habit_logs") \
         .select("log_date") \
         .eq("user_id", user.id) \

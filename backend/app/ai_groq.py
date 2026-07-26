@@ -1,9 +1,11 @@
 import os
 import json
 import base64
+from dotenv import load_dotenv
 from groq import Groq
 
-# Inisialisasi client Groq menggunakan API key dari env
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
+
 groq_api_key = os.getenv("GROQ_API_KEY", "")
 groq_client = Groq(api_key=groq_api_key) if groq_api_key else None
 
