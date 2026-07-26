@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'), override=True)
 
 RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
-FROM_EMAIL = os.environ.get("RESEND_FROM_EMAIL", "InkTrace AI <noreply@inktrace.ai>")
+# Resend gratis membutuhkan onboarding@resend.dev sebagai pengirim jika domain sendiri belum diverifikasi
+FROM_EMAIL = os.environ.get("RESEND_FROM_EMAIL", "InkTrace AI <onboarding@resend.dev>")
 
 
 def send_alert_email(

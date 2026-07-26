@@ -20,7 +20,7 @@ def process_groq_pipeline(image_path: str, kinematics: dict, sleep_hours: float,
     # 1. TAHAP 1: VISION OCR
     base64_image = encode_image(image_path)
     ocr_response = groq_client.chat.completions.create(
-        model="llama-3.2-11b-vision-preview",
+        model="llama-3.2-11b-vision-instruct",
         messages=[
             {
                 "role": "system",

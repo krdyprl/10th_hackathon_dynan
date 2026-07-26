@@ -47,6 +47,11 @@ export default function StresPage() {
   const [showChat, setShowChat] = useState(false)
   const [showBreathing, setShowBreathing] = useState(false)
 
+  // Save progress states
+  const [savingJournal, setSavingJournal] = useState(false)
+  const [savedJournal, setSavedJournal] = useState(false)
+  const [errorJournal, setErrorJournal] = useState('')
+
   useEffect(() => {
     if (strokes.length > 0 && !isTimerActive) setIsTimerActive(true)
   }, [strokes, isTimerActive])
@@ -175,6 +180,58 @@ export default function StresPage() {
     setIsTimerActive(false)
     setResult(null)
     setErrorMsg('')
+    setSavingJournal(false)
+    setSavedJournal(false)
+    setErrorJournal('')
+  }
+
+  const handleSaveJournal = async () => {
+    if (!result || savingJournal) return
+    setSavingJournal(true)
+    setErrorJournal('')
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+
+      const payload = {
+        sleep_hours: 7, // Default sleep hours matching analyze logic
+        exercise_status: 'no', // Default exercise status matching analyze logic
+        ocr_text: result.ocr_text || '',
+        kinematics: result.kinematics || {
+          stroke_count: strokes.length,
+          erase_count: eraseCount,
+          duration_seconds: durationSeconds
+        },
+        sentiment_label: result.sentiment_label || '',
+        sentiment_score: result.sentiment_score || 0,
+        handwriting_insights: result.handwriting_insights || '',
+        mood_stress_correlation: result.mood_stress_correlation || '',
+        recommendations: result.recommendations || '',
+        stress_score: result.stress_score || 0,
+        mood_score: result.mood_score || 0,
+        future_mood_prediction: result.future_mood_prediction || []
+      }
+
+      const res = await fetch(API_BASE + '/api/journals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session ? { Authorization: `Bearer ${session.access_token}` } : {})
+        },
+        body: JSON.stringify(payload)
+      })
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.detail || 'Gagal menyimpan jurnal')
+      }
+
+      setSavedJournal(true)
+    } catch (err) {
+      setErrorJournal(err.message || 'Gagal terhubung ke server database.')
+    } finally {
+      setSavingJournal(false)
+    }
   }
 
   const speak = (text) => {
@@ -383,6 +440,26 @@ export default function StresPage() {
 
             {/* Actions */}
             <div className="flex flex-col gap-2 mt-4">
+              {/* Tombol Simpan Jurnal Manual */}
+              <div className="mb-2">
+                {savedJournal ? (
+                  <div className="w-full py-3 rounded-xl text-sm font-medium text-center bg-green-50 border border-green-200 text-green-700 flex items-center justify-center gap-1.5">
+                    <span>✓ Jurnal Tersimpan!</span>
+                  </div>
+                ) : (
+                  <button onClick={handleSaveJournal} disabled={savingJournal}
+                    className="w-full py-3 rounded-xl text-sm font-semibold text-white cursor-pointer flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50"
+                    style={{ backgroundColor: 'var(--color-pilar-stres)' }}>
+                    {savingJournal ? '⏳ Menyimpan...' : '💾 Simpan Jurnal Ke Database'}
+                  </button>
+                )}
+                {errorJournal && (
+                  <div className="mt-2 p-2.5 rounded-xl text-xs text-center text-red-600 bg-red-50 border border-red-200">
+                    ⚠️ {errorJournal}
+                  </div>
+                )}
+              </div>
+
               {result.stress_score >= 70 && (
                 <>
                   <button onClick={() => setShowBreathing(true)}

@@ -8,24 +8,30 @@ router = APIRouter()
 
 @router.post("/api/habits")
 async def save_habits(
-    sleep_hours: float = Form(...),
-    exercise_status: str = Form(...),
-    water_glasses: int = Form(0),
-    sleep_note: str = Form(""),
+    sleep_hours: float = Form(None),
+    exercise_status: str = Form(None),
+    water_glasses: int = Form(None),
+    sleep_note: str = Form(None),
     log_date: str = Form(None),
     user = Depends(get_current_user)
 ):
     if not supabase:
         raise HTTPException(status_code=503, detail="Database not connected")
     try:
-        result = supabase.table("habit_logs").upsert({
+        update_data = {
             "user_id": user.id,
             "log_date": log_date or str(date.today()),
-            "sleep_hours": sleep_hours,
-            "exercise_status": exercise_status,
-            "water_glasses": water_glasses,
-            "sleep_note": sleep_note,
-        }, on_conflict="user_id,log_date").execute()
+        }
+        if sleep_hours is not None:
+            update_data["sleep_hours"] = sleep_hours
+        if exercise_status is not None:
+            update_data["exercise_status"] = exercise_status
+        if water_glasses is not None:
+            update_data["water_glasses"] = water_glasses
+        if sleep_note is not None:
+            update_data["sleep_note"] = sleep_note
+
+        result = supabase.table("habit_logs").upsert(update_data, on_conflict="user_id,log_date").execute()
         return {"status": "saved", "data": result.data[0] if result.data else {}}
     except Exception as e:
         import traceback; traceback.print_exc()

@@ -44,7 +44,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 // ── Komponen Water Tracker ────────────────────────────────────
-function WaterTracker({ glasses, onChange }) {
+function WaterTracker({ glasses, onChange, onSave, saving, saved, error }) {
   return (
     <div className="p-5 rounded-2xl border" style={{ borderColor: 'var(--color-pilar-sehat)', backgroundColor: 'var(--color-pilar-sehat-soft)' }}>
       <div className="flex items-center justify-between mb-3">
@@ -81,6 +81,18 @@ function WaterTracker({ glasses, onChange }) {
       {glasses >= WATER_TARGET && (
         <p className="text-xs text-center mt-2" style={{ color: '#22c55e' }}>🎉 Target hidrasi hari ini tercapai!</p>
       )}
+
+      {/* Tombol Simpan Hidrasi */}
+      <button onClick={onSave} disabled={saving}
+        className="w-full mt-3 py-2.5 rounded-xl text-xs font-semibold text-white cursor-pointer transition-all hover:opacity-90 disabled:opacity-60"
+        style={{ backgroundColor: saved ? '#22c55e' : '#3b82f6' }}>
+        {saving ? '⏳ Menyimpan...' : saved ? '✓ Tersimpan!' : '💾 Simpan Hidrasi'}
+      </button>
+      {error && (
+        <div className="mt-2 px-3 py-1.5 rounded-xl text-xs" style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5' }}>
+          ⚠️ {error}
+        </div>
+      )}
     </div>
   )
 }
@@ -92,11 +104,25 @@ export default function SehatPage() {
   const [exerciseStatus, setExerciseStatus] = useState('no')
   const [waterGlasses, setWaterGlasses] = useState(0)
   const [proofPreview, setProofPreview] = useState(null)
+  const [proofFile, setProofFile] = useState(null)
   const [streak, setStreak] = useState(0)
   const [sleepHistory, setSleepHistory] = useState([])
-  const [saved, setSaved] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState(null)
+
+  // Independent saving states for Sleep
+  const [savingSleep, setSavingSleep] = useState(false)
+  const [savedSleep, setSavedSleep] = useState(false)
+  const [errorSleep, setErrorSleep] = useState(null)
+
+  // Independent saving states for Water
+  const [savingWater, setSavingWater] = useState(false)
+  const [savedWater, setSavedWater] = useState(false)
+  const [errorWater, setErrorWater] = useState(null)
+
+  // Independent saving states for Exercise
+  const [savingExercise, setSavingExercise] = useState(false)
+  const [savedExercise, setSavedExercise] = useState(false)
+  const [errorExercise, setErrorExercise] = useState(null)
+
   const [loading, setLoading] = useState(true)
   const [aiSummary, setAiSummary] = useState(null)
   const [loadingAi, setLoadingAi] = useState(false)
@@ -162,17 +188,16 @@ export default function SehatPage() {
     } catch {}
   }
 
-  const handleSave = async () => {
-    if (saving) return
-    setSaving(true)
-    setSaveError(null)
+  const handleSaveSleep = async () => {
+    if (savingSleep) return
+    setSavingSleep(true)
+    setErrorSleep(null)
+    setSavedSleep(false)
     try {
       const headers = await getAuthHeaders()
-      if (!headers.Authorization) { setSaveError('Belum login'); setSaving(false); return }
+      if (!headers.Authorization) { setErrorSleep('Belum login'); setSavingSleep(false); return }
       const body = new URLSearchParams()
       body.append('sleep_hours', sleepHours.toString())
-      body.append('exercise_status', exerciseStatus)
-      body.append('water_glasses', waterGlasses.toString())
       body.append('sleep_note', sleepNote)
 
       const res = await fetch(API_BASE + '/api/habits', {
@@ -182,14 +207,73 @@ export default function SehatPage() {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        setSaveError(err.detail || `Error ${res.status}`)
+        setErrorSleep(err.detail || `Error ${res.status}`)
         return
       }
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2500)
+      setSavedSleep(true)
+      setTimeout(() => setSavedSleep(false), 2500)
       loadStreak()
-    } catch { setSaveError('Gagal menyimpan. Cek koneksi backend.') }
-    finally { setSaving(false) }
+    } catch { setErrorSleep('Gagal menyimpan. Cek koneksi backend.') }
+    finally { setSavingSleep(false) }
+  }
+
+  const handleSaveWater = async () => {
+    if (savingWater) return
+    setSavingWater(true)
+    setErrorWater(null)
+    setSavedWater(false)
+    try {
+      const headers = await getAuthHeaders()
+      if (!headers.Authorization) { setErrorWater('Belum login'); setSavingWater(false); return }
+      const body = new URLSearchParams()
+      body.append('water_glasses', waterGlasses.toString())
+
+      const res = await fetch(API_BASE + '/api/habits', {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        setErrorWater(err.detail || `Error ${res.status}`)
+        return
+      }
+      setSavedWater(true)
+      setTimeout(() => setSavedWater(false), 2500)
+      loadStreak()
+    } catch { setErrorWater('Gagal menyimpan. Cek koneksi backend.') }
+    finally { setSavingWater(false) }
+  }
+
+  const handleSaveExercise = async () => {
+    if (savingExercise) return
+    setSavingExercise(true)
+    setErrorExercise(null)
+    setSavedExercise(false)
+    try {
+      const headers = await getAuthHeaders()
+      if (!headers.Authorization) { setErrorExercise('Belum login'); setSavingExercise(false); return }
+      const body = new FormData()
+      body.append('exercise_status', exerciseStatus)
+      if (proofFile) {
+        body.append('proof_photo', proofFile)
+      }
+
+      const res = await fetch(API_BASE + '/api/habits', {
+        method: 'POST',
+        headers: headers, // Fetch otomatis set Content-Type untuk FormData
+        body: body,
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        setErrorExercise(err.detail || `Error ${res.status}`)
+        return
+      }
+      setSavedExercise(true)
+      setTimeout(() => setSavedExercise(false), 2500)
+      loadStreak()
+    } catch { setErrorExercise('Gagal menyimpan. Cek koneksi backend.') }
+    finally { setSavingExercise(false) }
   }
 
   const fetchAiSummary = async () => {
@@ -260,10 +344,29 @@ export default function SehatPage() {
           className="w-full px-3 py-2 rounded-xl border text-sm outline-none resize-none"
           style={{ borderColor: 'var(--color-border)', color: 'var(--color-text)', backgroundColor: 'white' }}
         />
+
+        {/* Tombol Simpan Tidur */}
+        <button onClick={handleSaveSleep} disabled={savingSleep}
+          className="w-full mt-3 py-2.5 rounded-xl text-xs font-semibold text-white cursor-pointer transition-all hover:opacity-90 disabled:opacity-60"
+          style={{ backgroundColor: savedSleep ? '#22c55e' : 'var(--color-pilar-sehat)' }}>
+          {savingSleep ? '⏳ Menyimpan...' : savedSleep ? '✓ Tersimpan!' : '💾 Simpan Tidur'}
+        </button>
+        {errorSleep && (
+          <div className="mt-2 px-4 py-2 rounded-xl text-xs" style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5' }}>
+            ⚠️ {errorSleep}
+          </div>
+        )}
       </div>
 
       {/* Air Minum */}
-      <WaterTracker glasses={waterGlasses} onChange={setWaterGlasses} />
+      <WaterTracker
+        glasses={waterGlasses}
+        onChange={setWaterGlasses}
+        onSave={handleSaveWater}
+        saving={savingWater}
+        saved={savedWater}
+        error={errorWater}
+      />
 
       {/* Olahraga */}
       <div className="p-5 rounded-2xl border" style={{ borderColor: 'var(--color-pilar-sehat)', backgroundColor: 'var(--color-pilar-sehat-soft)' }}>
@@ -291,31 +394,42 @@ export default function SehatPage() {
               <label className="flex-1 text-center py-2 rounded-xl border text-xs cursor-pointer bg-white">
                 📸 Pilih Foto
                 <input type="file" accept="image/*" className="sr-only"
-                  onChange={e => { const f = e.target.files?.[0]; if (f) setProofPreview(URL.createObjectURL(f)) }} />
+                  onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (f) {
+                      setProofFile(f);
+                      setProofPreview(URL.createObjectURL(f));
+                    }
+                  }} />
               </label>
               <label className="flex-1 text-center py-2 rounded-xl border text-xs cursor-pointer bg-white">
                 🤳 Kamera
                 <input type="file" accept="image/*" capture="user" className="sr-only"
-                  onChange={e => { const f = e.target.files?.[0]; if (f) setProofPreview(URL.createObjectURL(f)) }} />
+                  onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (f) {
+                      setProofFile(f);
+                      setProofPreview(URL.createObjectURL(f));
+                    }
+                  }} />
               </label>
             </div>
             {proofPreview && <img src={proofPreview} alt="proof" className="mt-2 h-20 rounded-xl border" style={{ borderColor: 'var(--color-border)' }} />}
           </div>
         )}
+
+        {/* Tombol Simpan Olahraga */}
+        <button onClick={handleSaveExercise} disabled={savingExercise}
+          className="w-full mt-3 py-2.5 rounded-xl text-xs font-semibold text-white cursor-pointer transition-all hover:opacity-90 disabled:opacity-60"
+          style={{ backgroundColor: savedExercise ? '#22c55e' : 'var(--color-pilar-sehat)' }}>
+          {savingExercise ? '⏳ Menyimpan...' : savedExercise ? '✓ Tersimpan!' : '💾 Simpan Olahraga'}
+        </button>
+        {errorExercise && (
+          <div className="mt-2 px-4 py-2 rounded-xl text-xs" style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5' }}>
+            ⚠️ {errorExercise}
+          </div>
+        )}
       </div>
-
-      {/* Simpan */}
-      <button onClick={handleSave} disabled={saving}
-        className="w-full py-3.5 rounded-xl text-sm font-semibold text-white cursor-pointer transition-all hover:opacity-90 disabled:opacity-60"
-        style={{ backgroundColor: saved ? '#22c55e' : 'var(--color-pilar-sehat)' }}>
-        {saving ? '⏳ Menyimpan...' : saved ? '✓ Tersimpan!' : '💾 Simpan Hari Ini'}
-      </button>
-
-      {saveError && (
-        <div className="px-4 py-3 rounded-xl text-sm" style={{ backgroundColor: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5' }}>
-          ⚠️ {saveError}
-        </div>
-      )}
 
       {/* Diagram Gabungan */}
       {hasChartData && (
