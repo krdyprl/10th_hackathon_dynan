@@ -11,6 +11,7 @@ import LiterasiPage from './pages/LiterasiPage'
 import SosialPage from './pages/SosialPage'
 import BantuanPage from './pages/BantuanPage'
 import DaruratPage from './pages/DaruratPage'
+import ProfilPage from './pages/ProfilPage'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/sosial" element={<SosialPage />} />
             <Route path="/bantuan" element={<BantuanPage />} />
             <Route path="/darurat" element={<DaruratPage />} />
+            <Route path="/profil" element={<ProfilPage />} />
             <Route path="*" element={<Navigate to="/welcome" replace />} />
           </Route>
         </Routes>

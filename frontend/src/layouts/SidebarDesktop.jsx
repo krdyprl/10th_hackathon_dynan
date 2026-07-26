@@ -1,6 +1,6 @@
 import React from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { PenLine, Sun, BarChart3, Heart, MapPin, AlertTriangle } from 'lucide-react'
+import { PenLine, Sun, BarChart3, Heart, MapPin, AlertTriangle, User } from 'lucide-react'
 
 const items = [
   { to: '/welcome', label: 'Halaman Awal', desc: 'Mood & ringkasan', icon: Sun, color: '--color-pilar-stres' },
@@ -10,6 +10,7 @@ const items = [
   { to: '/sosial', label: 'Dukungan Sosial', desc: 'Trusted Circle', icon: Heart, color: '--color-pilar-sosial' },
   { to: '/bantuan', label: 'Akses Bantuan', desc: 'Klinik terdekat', icon: MapPin, color: '--color-pilar-bantuan' },
   { to: '/darurat', label: 'Pencegahan Risiko', desc: 'Hotline & krisis', icon: AlertTriangle, color: '--color-pilar-darurat' },
+  { to: '/profil', label: 'Profil Saya', desc: 'Statistik & riwayat', icon: User, color: '--color-text' },
 ]
 
 export default function SidebarDesktop() {

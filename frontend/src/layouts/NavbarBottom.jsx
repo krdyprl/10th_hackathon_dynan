@@ -1,15 +1,15 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import { PenLine, Sun, BarChart3, Heart, MapPin, AlertTriangle } from 'lucide-react'
+import { PenLine, Sun, BarChart3, Heart, MapPin, User } from 'lucide-react'
 
 const items = [
   { to: '/welcome', label: 'Awal', icon: Sun, color: 'var(--color-pilar-stres)' },
-  { to: '/stres', label: 'Stres', icon: PenLine, color: 'var(--color-pilar-stres)' },
+  { to: '/stres', label: 'Tulis', icon: PenLine, color: 'var(--color-pilar-stres)' },
   { to: '/sehat', label: 'Sehat', icon: Sun, color: 'var(--color-pilar-sehat)' },
-  { to: '/literasi', label: 'Literasi', icon: BarChart3, color: 'var(--color-pilar-literasi)' },
+  { to: '/literasi', label: 'Wawasan', icon: BarChart3, color: 'var(--color-pilar-literasi)' },
   { to: '/sosial', label: 'Sosial', icon: Heart, color: 'var(--color-pilar-sosial)' },
   { to: '/bantuan', label: 'Bantuan', icon: MapPin, color: 'var(--color-pilar-bantuan)' },
-  { to: '/darurat', label: 'Darurat', icon: AlertTriangle, color: 'var(--color-pilar-darurat)' },
+  { to: '/profil', label: 'Profil', icon: User, color: 'var(--color-text-muted)' },
 ]
 
 export default function NavbarBottom() {
