@@ -403,8 +403,8 @@ pip install -r requirements.txt
 # Buat backend/.env: SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... GROQ_API_KEY=...
 uvicorn app.main:app --reload --port 8000
 
-# Database: Supabase Dashboard -> SQL Editor -> Paste migration SQL -> Run
-# Buka http://localhost:5173
+### Database: Supabase Dashboard -> SQL Editor -> Paste migration SQL -> Run
+### Buka http://localhost:5173
 
 ### 10.3 Demo Flow (5 Menit)
 
