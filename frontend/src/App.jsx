@@ -58,8 +58,42 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (session) {
+      fetchHistory(historyRange);
+    }
+  }, [session, historyRange]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
+  };
+
+  const fetchHistory = async (range = 7) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await fetch(`http://localhost:8000/api/history?range=${range}`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.entries && data.entries.length > 0) {
+        const trendData = data.entries.map((e, i) => ({
+          date: new Date(e.date).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }),
+          mood: e.mood_score,
+        }));
+        if (analysisResult?.future_mood_prediction) {
+          const pred = analysisResult.future_mood_prediction;
+          trendData.push(
+            { date: 'H+1', mood: pred[0] },
+            { date: 'H+2', mood: pred[1] },
+            { date: 'H+3', mood: pred[2] },
+            { date: 'H+4', mood: pred[3] },
+          );
+        }
+        setMoodTrend(trendData);
+      }
+    } catch {}
   };
 
   // Crisis Alert State
@@ -73,6 +107,7 @@ export default function App() {
   const [newContactType, setNewContactType] = useState('email');
   const [newContactValue, setNewContactValue] = useState('');
   const [notificationSent, setNotificationSent] = useState(false);
+  const [historyRange, setHistoryRange] = useState(7);
 
   // Start duration timer when drawing starts
   useEffect(() => {
@@ -201,6 +236,8 @@ export default function App() {
           { date: 'H+4 (Prediksi)', mood: result.future_mood_prediction[3] || 65 }
         ]);
       }
+
+      fetchHistory(historyRange);
 
       // Check for crisis trigger
       const criticalKeywords = ['bunuh diri', 'menyerah', 'akhiri hidup', 'self-harm', 'potong urat', 'mati saja', 'ingin mati'];
@@ -485,8 +522,21 @@ export default function App() {
 
             {/* Mood Trend Chart */}
             <div className="bg-white border border-[#d8d8d8] rounded-[8px] p-6 hover:shadow-[0_13px_13px_rgba(0,0,0,0.04)] transition-all">
-              <span className="text-[11px] font-semibold tracking-[0.1em] text-[#3b89ff] uppercase block mb-1">Tren Kesehatan Mental</span>
-              <h4 className="text-lg font-medium text-[#080808] mb-3">Tren Mood & Prediksi</h4>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <span className="text-[11px] font-semibold tracking-[0.1em] text-[#3b89ff] uppercase block mb-1">Tren Kesehatan Mental</span>
+                  <h4 className="text-lg font-medium text-[#080808]">Tren Mood & Prediksi</h4>
+                </div>
+                <select
+                  value={historyRange}
+                  onChange={(e) => setHistoryRange(parseInt(e.target.value))}
+                  className="text-xs bg-white border border-[#d8d8d8] rounded-[4px] px-2 py-1 text-[#080808] outline-none focus:border-[#3b89ff]"
+                >
+                  <option value={7}>7 hari</option>
+                  <option value={30}>30 hari</option>
+                  <option value={90}>90 hari</option>
+                </select>
+              </div>
               <MoodTrendChart data={moodTrend} />
               <div className="text-[11px] text-[#898989] font-mono mt-3 leading-relaxed">
                 Menyajikan riwayat mood Anda saat ini dan memproyeksikan stabilitas emosi untuk 4 hari mendatang.

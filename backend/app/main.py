@@ -97,3 +97,29 @@ async def analyze_journal(
     finally:
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
+
+@app.get("/api/history")
+async def get_history(range: int = 7, user = Depends(get_current_user)):
+    if not supabase:
+        return {"entries": []}
+
+    result = supabase.table("llm_analyses") \
+        .select("journals!inner(created_at), sentiment_label, sentiment_score, stress_score, mood_score") \
+        .gte("journals.created_at", f"now() - interval '{range} days'") \
+        .eq("journals.user_id", user.id) \
+        .order("journals.created_at", desc=True) \
+        .limit(100) \
+        .execute()
+
+    entries = []
+    for row in result.data:
+        entries.append({
+            "date": row["journals"]["created_at"],
+            "sentiment_label": row["sentiment_label"],
+            "sentiment_score": row["sentiment_score"],
+            "stress_score": row["stress_score"],
+            "mood_score": row["mood_score"],
+        })
+
+    entries.reverse()
+    return {"entries": entries}
