@@ -6,3 +6,5 @@ supabase
 PyJWT
 httpx
 pytest
+python-dotenv
+requests
