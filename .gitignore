@@ -10,3 +10,12 @@ build/
 .next/
 .cache/
 *.tsbuildinfo
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.eggs/
+venv/
+.venv/

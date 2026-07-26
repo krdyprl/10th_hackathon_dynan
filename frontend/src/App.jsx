@@ -5,6 +5,10 @@ import { MoodTrendChart } from './components/MoodTrendChart';
 import Auth from './components/Auth';
 import { supabase } from './lib/supabase';
 
+// Debug: log env
+console.log('VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
+console.log('Supabase client:', supabase);
+
 export default function App() {
   const [session, setSession] = useState(null);
   const [loadingSession, setLoadingSession] = useState(true);
@@ -58,16 +62,11 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (session) {
-      fetchHistory(historyRange);
-    }
-  }, [session, historyRange]);
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
 
+  const [historyRange, setHistoryRange] = useState(7);
   const fetchHistory = async (range = 7) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -132,7 +131,6 @@ export default function App() {
   const [newContactType, setNewContactType] = useState('email');
   const [newContactValue, setNewContactValue] = useState('');
   const [notificationSent, setNotificationSent] = useState(false);
-  const [historyRange, setHistoryRange] = useState(7);
   const [gpsLocation, setGpsLocation] = useState(null);
   const [helplines, setHelplines] = useState([]);
   const [loadingHelplines, setLoadingHelplines] = useState(false);
